@@ -16,8 +16,8 @@ import sys, io, json, math, time, copy, traceback, linecache
 
 _MAX_STDOUT = 20000
 
-def _cbb_fmt(exc):
-    frames = [f for f in traceback.extract_tb(exc.__traceback__) if f.filename == "solution.py"]
+def _cbb_fmt(exc, filename="solution.py"):
+    frames = [f for f in traceback.extract_tb(exc.__traceback__) if f.filename == filename]
     parts = []
     if frames:
         parts.append("Traceback (most recent call last):\n")
@@ -53,7 +53,7 @@ def _cbb_exec(code, fn_name, tests, out, buf):
         return
     fn = ns.get(fn_name)
     if not callable(fn):
-        out["error"] = f"NameError: function '{fn_name}' is not defined.\nDefine it at the top level with:  def {fn_name}(...):"
+        out["error"] = f"NameError: name '{fn_name}' is not defined"
         out["errorKind"] = "Missing Function"
         return
     for i, t in enumerate(tests):
@@ -77,13 +77,13 @@ def _cbb_exec(code, fn_name, tests, out, buf):
             r["output"] = _cbb_repr(actual)
             if "raises" in t:
                 r["passed"] = False
-                r["note"] = f"Expected {t['raises']} to be raised, but the function returned normally."
+                r["note"] = {"code": "no-raise", "exc": t["raises"]}
             else:
                 r["passed"] = _cbb_equal(actual, t["expected"], tol)
                 if not r["passed"] and tol is None and actual == t["expected"]:
-                    r["note"] = f"Right value, wrong type: got {type(actual).__name__}, expected {type(t['expected']).__name__}."
+                    r["note"] = {"code": "wrong-type", "got": type(actual).__name__, "want": type(t["expected"]).__name__}
                 elif not r["passed"] and actual is None:
-                    r["note"] = "Your function returned None. Did you forget a return statement?"
+                    r["note"] = {"code": "returned-none"}
         except BaseException as e:
             r["ms"] = (time.perf_counter() - t0) * 1000
             names = [c.__name__ for c in type(e).__mro__]
@@ -111,6 +111,23 @@ def __cbb_run(code, fn_name, tests_json):
     s = buf.getvalue()
     out["stdout"] = s if len(s) <= _MAX_STDOUT else s[:_MAX_STDOUT] + "\n... (output truncated)"
     return json.dumps(out)
+
+def __cbb_snippet(code):
+    """Run a lesson code example as a script; capture stdout and any error."""
+    out = {"stdout": "", "error": None}
+    linecache.cache["example.py"] = (len(code), None, code.splitlines(True), "example.py")
+    buf = io.StringIO()
+    saved = sys.stdout, sys.stderr
+    sys.stdout = sys.stderr = buf
+    try:
+        exec(compile(code, "example.py", "exec"), {"__name__": "__main__"})
+    except BaseException as e:
+        out["error"] = _cbb_fmt(e, "example.py")
+    finally:
+        sys.stdout, sys.stderr = saved
+    s = buf.getvalue()
+    out["stdout"] = s if len(s) <= _MAX_STDOUT else s[:_MAX_STDOUT] + "\n... (output truncated)"
+    return json.dumps(out)
 `;
 
 let pyodide = null;
@@ -128,12 +145,19 @@ const ready = (async () => {
 })();
 
 onmessage = async (event) => {
-  const { id, code, fnName, tests } = event.data;
+  const { id, kind, code, fnName, tests } = event.data;
   try {
     await ready;
-    const run = pyodide.globals.get("__cbb_run");
-    const json = run(code, fnName, JSON.stringify(tests));
-    run.destroy();
+    let json;
+    if (kind === "snippet") {
+      const snippet = pyodide.globals.get("__cbb_snippet");
+      json = snippet(code);
+      snippet.destroy();
+    } else {
+      const run = pyodide.globals.get("__cbb_run");
+      json = run(code, fnName, JSON.stringify(tests));
+      run.destroy();
+    }
     postMessage({ type: "result", id, result: JSON.parse(json) });
   } catch (err) {
     postMessage({ type: "result", id, internalError: String(err && err.message ? err.message : err) });

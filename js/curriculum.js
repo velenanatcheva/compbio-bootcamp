@@ -1,114 +1,139 @@
 /* ==========================================================================
-   Curriculum — every module is pure data: lesson HTML, problem statement,
-   starter code, reference solution and test cases.
+   Curriculum — every module is pure data: lesson HTML (Hebrew), problem
+   statement, starter code, reference solution and test cases.
    Lesson HTML may contain:
      <div data-viz="name"></div>   → mounted by CBB.Visuals[name]
      <pre class="code">…</pre>      → syntax-highlighted with CodeMirror.runMode
+     demo(...) blocks              → runnable code examples ([data-run-example])
    Test case shape:
      { args: [...], expected: any, tol?: number, hidden?: bool }
      { args: [...], raises: "ValueError", hidden?: bool }
+   Python code, identifiers and core scientific terms stay in English.
    ========================================================================== */
 (function () {
   const CBB = (window.CBB = window.CBB || {});
 
   const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  const py = (src) => `<pre class="code" data-lang="python">${esc(src.replace(/^\n+|\s+$/g, ""))}</pre>`;
-  const out = (src) => `<pre class="code code-out">${esc(src.replace(/^\n+|\s+$/g, ""))}</pre>`;
+  const trim = (s) => s.replace(/^\n+|\s+$/g, "");
+  const py = (src) => `<pre class="code" data-lang="python" dir="ltr">${esc(trim(src))}</pre>`;
   const nt = (seq) =>
-    `<span class="seq-inline">${seq
+    `<span class="seq-inline" dir="ltr">${seq
       .split("")
       .map((b) => `<span class="nt-i nt-${b.toLowerCase()}">${b}</span>`)
       .join("")}</span>`;
+
+  /** A ready-made, runnable code example with a step-by-step Hebrew walkthrough. */
+  const demo = ({ title, intro, code, steps }) => `
+<div class="demo">
+  <div class="demo-head"><span class="demo-badge">דוגמה</span><span class="demo-title">${title}</span></div>
+  <p class="demo-intro">${intro}</p>
+  <div class="demo-code" dir="ltr">
+    ${py(code)}
+    <div class="demo-bar">
+      <button class="btn btn-sm demo-run" data-run-example>
+        <svg viewBox="0 0 24 24" width="12" height="12"><path d="M7 5l12 7-12 7z" fill="currentColor"/></svg>
+        <span>הרצת הדוגמה</span>
+      </button>
+      <span class="demo-hint">פלט יוצג כאן</span>
+    </div>
+    <pre class="demo-out" hidden></pre>
+  </div>
+  <div class="demo-steps-title">איך זה עובד, שלב אחר שלב</div>
+  <ol class="demo-steps">${steps.map((s) => `<li>${s}</li>`).join("")}</ol>
+</div>`;
+
+  const examplesIntro = `<p>לפני שתכתבו פתרון משלכם, הנה דוגמאות מוכנות שמשתמשות באותם כלים ורעיונות. לחצו <strong>הרצת הדוגמה</strong> כדי להריץ את הקוד בדפדפן ולראות את הפלט, ואז קראו את ההסבר המפורט. נסו גם לשנות את הקוד בראש ולהריץ בעורך.</p>`;
 
   /* ─────────────────────────────── Module 1 ─────────────────────────────── */
   const m1 = {
     id: "m1",
     number: 1,
-    title: "The Central Dogma & Strings",
-    short: "Central Dogma & Strings",
-    difficulty: "Easy",
+    title: "הדוגמה המרכזית ומחרוזות",
+    short: "הדוגמה המרכזית",
+    level: "easy",
+    difficulty: "קל",
     minutes: 25,
-    topics: ["Transcription", "Python strings", "str.replace"],
+    topics: ["שעתוק", "מחרוזות ב-Python", "str.replace"],
     fnName: "transcribe",
 
     lesson: `
-<p class="eyebrow">Module 1 · Biology × Computer Science</p>
-<h1>The Central Dogma &amp; Strings</h1>
-<p class="lede">Every cell in your body carries the same ~3.1 billion-letter instruction manual. In this module you will learn how that manual is <em>read</em>, and why, to a computer, a genome is just a very long string.</p>
+<p class="eyebrow">מודול 1 · ביולוגיה × מדעי המחשב</p>
+<h1>הדוגמה המרכזית ומחרוזות</h1>
+<p class="lede">כל תא בגופכם נושא את אותו ספר הוראות, באורך של כ-3.1 מיליארד אותיות. במודול הזה תלמדו איך התא <em>קורא</em> את הספר הזה, ולמה מבחינת המחשב גנום הוא בסך הכול מחרוזת ארוכה מאוד.</p>
 
 <div class="objectives">
-  <div class="objectives-title">You will learn</div>
+  <div class="objectives-title">מה תלמדו</div>
   <ul>
-    <li>What DNA and RNA are made of, and how bases pair</li>
-    <li>How transcription copies a gene from DNA into messenger RNA</li>
-    <li>How Python represents sequences as immutable strings</li>
-    <li>Four ways to transform a string, and what each one costs</li>
+    <li>ממה בנויים DNA ו-RNA ואיך בסיסים יוצרים זוגות</li>
+    <li>איך תהליך השעתוק מעתיק גן מ-DNA ל-RNA שליח (mRNA)</li>
+    <li>איך Python מייצגת רצפים כמחרוזות בלתי ניתנות לשינוי</li>
+    <li>ארבע דרכים להמיר מחרוזת, ומה המחיר של כל אחת</li>
   </ul>
 </div>
 
-<h2><span class="h-num">1</span>The Central Dogma of molecular biology</h2>
-<p>In 1958 Francis Crick described how sequence information moves inside a cell. Information flows from <strong>DNA</strong> to <strong>RNA</strong> to <strong>protein</strong>. The reverse step, from protein back to nucleic acid, never happens.</p>
+<h2><span class="h-num">1</span>הדוגמה המרכזית של הביולוגיה המולקולרית</h2>
+<p>בשנת 1958 תיאר פרנסיס קריק כיצד מידע רצפי זורם בתוך התא: מ-<strong>DNA</strong> אל <strong>RNA</strong>, ומשם אל <strong>חלבון</strong>. הכיוון ההפוך, מחלבון בחזרה לחומצת גרעין, לעולם אינו מתרחש.</p>
 
-<div class="dogma">
-  <div class="dogma-node dogma-dna"><span class="dogma-icon">🧬</span>DNA<small>storage</small></div>
-  <div class="dogma-arrow"><span>transcription</span></div>
-  <div class="dogma-node dogma-rna"><span class="dogma-icon">〰️</span>RNA<small>message</small></div>
-  <div class="dogma-arrow"><span>translation</span></div>
-  <div class="dogma-node dogma-protein"><span class="dogma-icon">⬢</span>Protein<small>machine</small></div>
+<div class="dogma" dir="ltr">
+  <div class="dogma-node dogma-dna"><span class="dogma-icon">🧬</span>DNA<small>אחסון</small></div>
+  <div class="dogma-arrow"><span>שעתוק</span></div>
+  <div class="dogma-node dogma-rna"><span class="dogma-icon">〰️</span>RNA<small>שליח</small></div>
+  <div class="dogma-arrow"><span>תרגום</span></div>
+  <div class="dogma-node dogma-protein"><span class="dogma-icon">⬢</span>חלבון<small>מכונה</small></div>
 </div>
-<p class="caption">DNA also copies itself (<em>replication</em>). Retroviruses such as HIV can go from RNA back to DNA (<em>reverse transcription</em>).</p>
+<p class="caption">DNA גם משכפל את עצמו (<em>שכפול</em>). נגיפים רטרו כמו HIV יכולים לעבור מ-RNA בחזרה ל-DNA (<em>שעתוק לאחור</em>).</p>
 
 <ul class="tight">
-  <li><strong>Replication</strong> (DNA → DNA): copying the whole genome before a cell divides.</li>
-  <li><strong>Transcription</strong> (DNA → RNA): copying one gene into a short-lived messenger, the <em>mRNA</em>.</li>
-  <li><strong>Translation</strong> (RNA → protein): the ribosome reads the mRNA three letters (one <em>codon</em>) at a time and builds a chain of amino acids.</li>
+  <li><strong>שכפול</strong> (DNA → DNA): העתקת הגנום כולו לפני שהתא מתחלק.</li>
+  <li><strong>שעתוק</strong> (DNA → RNA): העתקת גן אחד לשליח קצר-מועד, ה-<em>mRNA</em>.</li>
+  <li><strong>תרגום</strong> (RNA → חלבון): הריבוזום קורא את ה-mRNA שלוש אותיות בכל פעם (<em>קודון</em> אחד) ובונה שרשרת של חומצות אמינו.</li>
 </ul>
 
-<h2><span class="h-num">2</span>Nucleotides: the alphabet of life</h2>
-<p>A nucleotide has three parts: a phosphate group, a five-carbon sugar (deoxyribose in DNA, ribose in RNA) and a nitrogenous <strong>base</strong>. Only the base changes from one nucleotide to the next, so we can write any nucleic acid as a string over a tiny alphabet.</p>
+<h2><span class="h-num">2</span>נוקלאוטידים: האלפבית של החיים</h2>
+<p>נוקלאוטיד בנוי משלושה חלקים: קבוצת פוספט, סוכר בן חמישה פחמנים (דאוקסיריבוז ב-DNA, ריבוז ב-RNA) ו<strong>בסיס</strong> חנקני. רק הבסיס משתנה מנוקלאוטיד אחד למשנהו, ולכן אפשר לכתוב כל חומצת גרעין כמחרוזת מעל אלפבית זעיר.</p>
 
 <table class="table">
-  <thead><tr><th>Base</th><th>Symbol</th><th>Class</th><th>Pairs with</th><th>H-bonds</th><th>Found in</th></tr></thead>
+  <thead><tr><th>בסיס</th><th>סמל</th><th>סוג</th><th>נקשר אל</th><th>קשרי מימן</th><th>נמצא ב-</th></tr></thead>
   <tbody>
-    <tr><td>Adenine</td><td>${nt("A")}</td><td>Purine (two rings)</td><td>T (DNA) / U (RNA)</td><td>2</td><td>DNA, RNA</td></tr>
-    <tr><td>Guanine</td><td>${nt("G")}</td><td>Purine</td><td>C</td><td>3</td><td>DNA, RNA</td></tr>
-    <tr><td>Cytosine</td><td>${nt("C")}</td><td>Pyrimidine (one ring)</td><td>G</td><td>3</td><td>DNA, RNA</td></tr>
-    <tr><td>Thymine</td><td>${nt("T")}</td><td>Pyrimidine</td><td>A</td><td>2</td><td>DNA only</td></tr>
-    <tr><td>Uracil</td><td>${nt("U")}</td><td>Pyrimidine</td><td>A</td><td>2</td><td>RNA only</td></tr>
+    <tr><td>אדנין</td><td>${nt("A")}</td><td>פורין (שתי טבעות)</td><td>T ב-DNA / U ב-RNA</td><td>2</td><td>DNA, RNA</td></tr>
+    <tr><td>גואנין</td><td>${nt("G")}</td><td>פורין</td><td>C</td><td>3</td><td>DNA, RNA</td></tr>
+    <tr><td>ציטוזין</td><td>${nt("C")}</td><td>פירימידין (טבעת אחת)</td><td>G</td><td>3</td><td>DNA, RNA</td></tr>
+    <tr><td>תימין</td><td>${nt("T")}</td><td>פירימידין</td><td>A</td><td>2</td><td>DNA בלבד</td></tr>
+    <tr><td>אורציל</td><td>${nt("U")}</td><td>פירימידין</td><td>A</td><td>2</td><td>RNA בלבד</td></tr>
   </tbody>
 </table>
 
 <div class="callout callout-bio">
-  <div class="callout-title">Why does RNA use U instead of T?</div>
-  <p>Cytosine slowly loses an amino group and turns into uracil. If DNA normally contained U, repair enzymes could not tell a damaged C from a real U. Using T (a methylated U) in DNA marks every U as damage. RNA is short-lived and disposable, so it can use the cheaper uracil.</p>
+  <div class="callout-title">למה RNA משתמש ב-U במקום ב-T?</div>
+  <p>ציטוזין מאבד לאט קבוצת אמין והופך לאורציל. אילו DNA היה מכיל U באופן רגיל, אנזימי התיקון לא היו יכולים להבחין בין C פגום לבין U אמיתי. השימוש ב-T (שהוא U עם קבוצת מתיל) ב-DNA מסמן כל U כנזק. RNA הוא מולקולה קצרת-מועד וחד-פעמית, ולכן הוא יכול להסתפק באורציל, שזול יותר לייצור.</p>
 </div>
 
-<h3>Strands, direction and complementarity</h3>
-<p>DNA is a <strong>double helix</strong> of two strands. They are:</p>
+<h3>גדילים, כיווניות והשלמה</h3>
+<p>DNA הוא <strong>סליל כפול</strong> שמורכב משני גדילים. הגדילים הם:</p>
 <ul class="tight">
-  <li><strong>Complementary</strong>: A always faces T and G always faces C. If you know one strand, you know the other.</li>
-  <li><strong>Antiparallel</strong>: each strand has a direction, written 5′→3′ after the sugar carbons. The two strands run in opposite directions.</li>
+  <li><strong>משלימים</strong>: A תמיד מול T, ו-G תמיד מול C. מי שיודע גדיל אחד, יודע גם את השני.</li>
+  <li><strong>אנטי-מקביליים</strong>: לכל גדיל יש כיוון, שנכתב <span dir="ltr">5′→3′</span> לפי מספור הפחמנים בסוכר. שני הגדילים פונים לכיוונים הפוכים.</li>
 </ul>
-<p>During transcription, RNA polymerase reads the <strong>template strand</strong> from 3′ to 5′ and builds RNA from 5′ to 3′, pairing each template base with its complement. The new RNA is therefore complementary to the template, which makes it <em>identical</em> to the other strand, the <strong>coding strand</strong>, except that every T becomes a U.</p>
+<p>במהלך השעתוק, האנזים RNA פולימראז קורא את <strong>גדיל התבנית</strong> מ-3′ ל-5′ ובונה RNA מ-5′ ל-3′, כשהוא מצמיד לכל בסיס בתבנית את הבסיס המשלים לו. לכן ה-RNA החדש משלים לגדיל התבנית, כלומר הוא <em>זהה</em> לגדיל השני, <strong>הגדיל המקודד</strong>, פרט לכך שכל T מוחלף ב-U.</p>
 
-<div class="formula">
-  <div><span class="f-label">coding  5′</span>${nt("ATGGCCATTG")}<span class="f-label">3′</span></div>
-  <div><span class="f-label">template 3′</span>${nt("TACCGGTAAC")}<span class="f-label">5′</span></div>
-  <div class="f-arrow">↓ RNA polymerase</div>
-  <div><span class="f-label">mRNA  5′</span>${nt("AUGGCCAUUG")}<span class="f-label">3′</span></div>
+<div class="formula" dir="ltr">
+  <div><span class="f-label">גדיל מקודד 5′</span>${nt("ATGGCCATTG")}<span class="f-label">3′</span></div>
+  <div><span class="f-label">גדיל תבנית 3′</span>${nt("TACCGGTAAC")}<span class="f-label">5′</span></div>
+  <div class="f-arrow">↓ RNA פולימראז</div>
+  <div><span class="f-label">mRNA 5′</span>${nt("AUGGCCAUUG")}<span class="f-label">3′</span></div>
 </div>
 
 <div class="callout callout-cs">
-  <div class="callout-title">The computational insight</div>
-  <p>Given the coding strand, the whole molecular process reduces to one string operation: <strong>replace every <code>T</code> with <code>U</code></strong>. Bioinformatics often works like this. Once you understand the biology, a complicated process becomes a simple, exact transformation on strings.</p>
+  <div class="callout-title">התובנה החישובית</div>
+  <p>בהינתן הגדיל המקודד, כל התהליך המולקולרי מצטמצם לפעולת מחרוזת אחת: <strong>להחליף כל <code>T</code> ב-<code>U</code></strong>. ביואינפורמטיקה עובדת כך לעיתים קרובות: ברגע שמבינים את הביולוגיה, תהליך מסובך הופך להמרה פשוטה ומדויקת על מחרוזות.</p>
 </div>
 
-<h2><span class="h-num">3</span>Visual Lab: watch transcription happen</h2>
-<p>Type any coding-strand sequence and press <strong>Transcribe</strong>. Watch the polymerase open a <em>transcription bubble</em>. The double helix re-zips behind it, and the mRNA grows one base at a time.</p>
+<h2><span class="h-num">3</span>מעבדה חזותית: צפו בשעתוק בזמן אמת</h2>
+<p>הקלידו רצף כלשהו של גדיל מקודד ולחצו <strong>שעתוק</strong>. צפו בפולימראז פותח <em>בועת שעתוק</em>: הסליל הכפול נסגר מחדש מאחוריו, ומולקולת ה-mRNA גדלה בסיס אחר בסיס.</p>
 <div data-viz="transcription"></div>
 
-<h2><span class="h-num">4</span>Strings in Python</h2>
-<p>A Python <code>str</code> is an <strong>immutable sequence</strong> of characters. That makes it a good fit for DNA: you can index it, slice it, loop over it and measure it with the same tools you use for lists.</p>
+<h2><span class="h-num">4</span>מחרוזות ב-Python</h2>
+<p>מחרוזת (<code>str</code>) ב-Python היא <strong>רצף בלתי ניתן לשינוי</strong> (immutable) של תווים. זה מתאים מאוד ל-DNA: אפשר לגשת לפי אינדקס, לחתוך, לעבור בלולאה ולמדוד אורך בעזרת אותם כלים שמשמשים לרשימות.</p>
 ${py(`
 dna = "GATTACA"
 
@@ -123,8 +148,8 @@ for base in dna:            # iterate character by character
     print(base, end=" ")    # G A T T A C A
 `)}
 
-<h3>Immutability: why <code>dna[0] = "U"</code> fails</h3>
-<p>You cannot change a string in place. Every "modification" builds a <em>new</em> string:</p>
+<h3>אי-שינוי: למה <code>dna[0] = "U"</code> נכשל</h3>
+<p>אי אפשר לשנות מחרוזת במקום. כל "שינוי" בונה מחרוזת <em>חדשה</em>:</p>
 ${py(`
 dna = "GATTACA"
 dna[2] = "U"          # TypeError: 'str' object does not support item assignment
@@ -132,8 +157,8 @@ rna = dna.replace("T", "U")   # OK - returns a brand-new string
 print(dna, rna)               # GATTACA GAUUACA
 `)}
 
-<h3>Four ways to transcribe</h3>
-<p>All four are correct. They differ in clarity and speed:</p>
+<h3>ארבע דרכים לשעתק</h3>
+<p>כל הארבע נכונות. הן נבדלות זו מזו בבהירות ובמהירות:</p>
 ${py(`
 # 1) Built-in method - clearest, implemented in C, O(n)
 rna = dna.replace("T", "U")
@@ -153,46 +178,109 @@ for b in dna:
 `)}
 
 <div class="complexity">
-  <div><span class="cx-label">Time</span><span class="cx-val">O(n)</span><span class="cx-note">each base is examined once</span></div>
-  <div><span class="cx-label">Space</span><span class="cx-val">O(n)</span><span class="cx-note">a new string of equal length is produced</span></div>
+  <div><span class="cx-label">זמן</span><span class="cx-val" dir="ltr">O(n)</span><span class="cx-note">כל בסיס נבדק פעם אחת</span></div>
+  <div><span class="cx-label">זיכרון</span><span class="cx-val" dir="ltr">O(n)</span><span class="cx-note">נוצרת מחרוזת חדשה באותו אורך</span></div>
 </div>
 
 <div class="callout callout-tip">
-  <div class="callout-title">Pro tip: <code>str.translate</code> is the workhorse</div>
-  <p>Next you will need the <em>reverse complement</em> of a strand (A↔T, C↔G, then reverse). One translation table handles all four swaps in a single C-speed pass: <code>dna.translate(str.maketrans("ACGT", "TGCA"))[::-1]</code>.</p>
+  <div class="callout-title">טיפ מקצועי: <code>str.translate</code> הוא סוס העבודה</div>
+  <p>בהמשך תצטרכו את <em>ההשלמה ההפוכה</em> (reverse complement) של גדיל: החלפה של A↔T ושל C↔G, ואז היפוך. טבלת תרגום אחת מבצעת את ארבע ההחלפות במעבר יחיד, במהירות של C: <code>dna.translate(str.maketrans("ACGT", "TGCA"))[::-1]</code>.</p>
 </div>
 
 <div class="callout callout-warn">
-  <div class="callout-title">Real-world pitfalls</div>
+  <div class="callout-title">מלכודות מהעולם האמיתי</div>
   <ul class="tight">
-    <li><strong>Case</strong>: some files write sequence in lowercase (<em>soft-masking</em>, used to mark repeats). <code>"t" != "T"</code>.</li>
-    <li><strong>Whitespace</strong>: FASTA files wrap sequences at 60–80 characters. Strip the newlines before you analyse anything.</li>
-    <li><strong>Ambiguity codes</strong>: <code>N</code> means "any base". Your code should pass it through unchanged rather than crash.</li>
+    <li><strong>אותיות גדולות וקטנות</strong>: קבצים מסוימים כותבים רצפים באותיות קטנות (<em>soft-masking</em>, לסימון אזורים חוזרים). <code>"t" != "T"</code>.</li>
+    <li><strong>רווחים ושורות</strong>: קובצי FASTA שוברים רצפים לשורות של 60–80 תווים. הסירו את תווי השורה החדשה לפני כל ניתוח.</li>
+    <li><strong>קודי עמימות</strong>: <code>N</code> פירושו "בסיס כלשהו". הקוד שלכם צריך להעביר אותו הלאה ללא שינוי, ולא לקרוס.</li>
   </ul>
 </div>
 
-<h2><span class="h-num">5</span>Your task</h2>
-<p>Open the <strong>Problem</strong> tab and implement <code>transcribe(dna_string)</code>. Use <strong>Run</strong> to check the visible examples, then <strong>Submit</strong> to check the hidden edge cases as well.</p>
-<p class="muted small">In research code you would usually call <code>Bio.Seq.Seq(dna).transcribe()</code> from Biopython. Under the hood it does exactly what you are about to write.</p>
+<h2><span class="h-num">5</span>דוגמאות קוד</h2>
+${examplesIntro}
+
+${demo({
+  title: "השלמה הפוכה (Reverse Complement)",
+  intro: "השלמה הפוכה היא אחת הפעולות הנפוצות ביותר בביואינפורמטיקה: היא מחשבת את הרצף של הגדיל השני, כפי שהוא נקרא בכיוון <span dir='ltr'>5′→3′</span> שלו.",
+  code: `
+dna = "ATGCGTACCTTAG"
+
+complement_table = str.maketrans("ACGT", "TGCA")
+complement = dna.translate(complement_table)
+reverse_complement = complement[::-1]
+
+print("DNA:               ", dna)
+print("Complement:        ", complement)
+print("Reverse complement:", reverse_complement)
+`,
+  steps: [
+    `<code>str.maketrans("ACGT", "TGCA")</code> בונה טבלת מיפוי: התו הראשון במחרוזת הראשונה ממופה לתו הראשון בשנייה, וכן הלאה. כך מתקבלים A→T, ‏C→G, ‏G→C ו-T→A.`,
+    `<code>dna.translate(complement_table)</code> עובר על המחרוזת פעם אחת ומחליף כל תו לפי הטבלה. התוצאה היא הגדיל המשלים, שעדיין כתוב בכיוון <span dir="ltr">3′→5′</span>.`,
+    `<code>complement[::-1]</code> הופך את סדר התווים (חיתוך עם צעד <code>-1</code>). כך מקבלים את הגדיל המשלים בכיוון <span dir="ltr">5′→3′</span>, כלומר את <strong>ההשלמה ההפוכה</strong>, הצורה שבה רצפים נשמרים במאגרי מידע.`,
+    `שימו לב שכל פעולה יוצרת מחרוזת חדשה: <code>dna</code> המקורית לא משתנה, כי מחרוזות ב-Python אינן ניתנות לשינוי.`,
+    `למה זה חשוב? גן יכול לשבת על כל אחד משני הגדילים. כלים כמו BLAST ותוכנות למיפוי קריאות בודקים תמיד גם את ההשלמה ההפוכה.`,
+  ],
+})}
+
+${demo({
+  title: "מ-DNA לחלבון: שעתוק ותרגום של גן זעיר",
+  intro: "הדוגמה הזו מריצה את הדוגמה המרכזית מקצה לקצה: שעתוק של גדיל מקודד ל-mRNA, ואז תרגום של ה-mRNA לרצף של חומצות אמינו.",
+  code: `
+CODON_TABLE = {
+    "AUG": "M", "GCC": "A", "AUU": "I", "GUA": "V",
+    "GGC": "G", "CGC": "R", "UGA": "*", "UAA": "*", "UAG": "*",
+}
+
+def translate_rna(rna):
+    protein = []
+    for i in range(0, len(rna) - 2, 3):
+        codon = rna[i:i + 3]
+        amino_acid = CODON_TABLE.get(codon, "?")
+        if amino_acid == "*":          # stop codon
+            break
+        protein.append(amino_acid)
+    return "".join(protein)
+
+coding_strand = "ATGGCCATTGTAATGGGCCGCTGAAAG"
+mrna = coding_strand.replace("T", "U")
+codons = [mrna[i:i + 3] for i in range(0, len(mrna), 3)]
+
+print("mRNA:   ", mrna)
+print("Codons: ", " ".join(codons))
+print("Protein:", translate_rna(mrna))
+`,
+  steps: [
+    `<code>CODON_TABLE</code> הוא מילון (dict) שממפה כל קודון לקוד של חומצת אמינו באות אחת. הקוד הגנטי המלא כולל 64 קודונים; כאן מופיעים רק אלה שהדוגמה צריכה, והסימן <code>*</code> מסמן קודון עצירה.`,
+    `<code>range(0, len(rna) - 2, 3)</code> מייצר את האינדקסים 0, 3, 6 וכן הלאה, כלומר את תחילתו של כל קודון. החסרת 2 מבטיחה שלא נחתוך קודון חלקי בסוף הרצף.`,
+    `<code>rna[i:i + 3]</code> חותך שלוש אותיות. <code>CODON_TABLE.get(codon, "?")</code> מחזיר את חומצת האמינו, או <code>"?"</code> אם הקודון לא נמצא במילון, במקום לזרוק <code>KeyError</code>.`,
+    `כשמגיעים לקודון עצירה, <code>break</code> יוצא מהלולאה, בדיוק כמו שהריבוזום משתחרר מה-mRNA. לכן הקודון <code>AAG</code> שמופיע אחרי <code>UGA</code> לא מתורגם.`,
+    `את החלבון בונים כרשימה ומחברים בסוף עם <code>"".join(protein)</code>. זה יעיל יותר מחיבור חוזר של מחרוזות עם <code>+=</code>.`,
+    `השורה <code>coding_strand.replace("T", "U")</code> היא השעתוק עצמו, אותו רעיון שתממשו בתרגיל כפונקציה עצמאית.`,
+  ],
+})}
+
+<h2><span class="h-num">6</span>המשימה שלכם</h2>
+<p>פתחו את לשונית <strong>תרגיל</strong> וממשו את <code>transcribe(dna_string)</code>. השתמשו ב<strong>הרצה</strong> כדי לבדוק את הדוגמאות הגלויות, ואז ב<strong>הגשה</strong> כדי לבדוק גם את מקרי הקצה הנסתרים.</p>
+<p class="muted small">בקוד מחקרי הייתם בדרך כלל קוראים ל-<code>Bio.Seq.Seq(dna).transcribe()</code> מהספרייה Biopython. מאחורי הקלעים היא עושה בדיוק את מה שאתם עומדים לכתוב.</p>
 `,
 
     problem: {
       statement: `
-<p>An RNA string is a string over the alphabet <code>{A, C, G, U}</code>. Given a DNA string <code>t</code> that is the <strong>coding strand</strong> of a gene, its transcribed RNA <code>u</code> is formed by replacing every occurrence of <code>"T"</code> in <code>t</code> with <code>"U"</code>.</p>
-<p>Implement <code>transcribe(dna_string)</code> so it returns the RNA transcript as a string.</p>`,
+<p>מחרוזת RNA היא מחרוזת מעל האלפבית <code>{A, C, G, U}</code>. בהינתן מחרוזת DNA ‏<code>t</code> שהיא <strong>הגדיל המקודד</strong> של גן, תעתיק ה-RNA שלה, <code>u</code>, מתקבל מהחלפת כל מופע של <code>"T"</code> ב-<code>t</code> ב-<code>"U"</code>.</p>
+<p>ממשו את <code>transcribe(dna_string)</code> כך שתחזיר את תעתיק ה-RNA כמחרוזת.</p>`,
       examples: [
-        { input: 'dna_string = "GATGGAACTTGACTACGTAAATT"', output: '"GAUGGAACUUGACUACGUAAAUU"', explanation: "Every T becomes U; A, C and G are unchanged." },
+        { input: 'dna_string = "GATGGAACTTGACTACGTAAATT"', output: '"GAUGGAACUUGACUACGUAAAUU"', explanation: "כל T הופך ל-U; ‏A, ‏C ו-G נשארים ללא שינוי." },
         { input: 'dna_string = "TTTT"', output: '"UUUU"' },
       ],
       constraints: [
         "<code>0 ≤ len(dna_string) ≤ 10<sup>5</sup></code>",
-        "<code>dna_string</code> contains only uppercase <code>A</code>, <code>C</code>, <code>G</code>, <code>T</code>",
-        "Return a <code>str</code>, not a list",
+        "<code>dna_string</code> מכילה רק את האותיות הגדולות <code>A</code>, <code>C</code>, <code>G</code>, <code>T</code>",
+        "יש להחזיר <code>str</code>, לא רשימה",
       ],
       hints: [
-        "Python strings are immutable, so you will return a <em>new</em> string.",
-        "Have a look at the built-in <code>str.replace(old, new)</code> method.",
-        "Edge case: what should an empty string transcribe to?",
+        "מחרוזות ב-Python אינן ניתנות לשינוי, ולכן תחזירו מחרוזת <em>חדשה</em>.",
+        "הציצו במתודה המובנית <code>str.replace(old, new)</code>.",
+        "מקרה קצה: מה צריך להיות התעתיק של מחרוזת ריקה?",
       ],
     },
 
@@ -225,75 +313,76 @@ for b in dna:
   const m2 = {
     id: "m2",
     number: 2,
-    title: "Sequence Analysis & GC Content",
-    short: "GC Content",
-    difficulty: "Easy",
+    title: "ניתוח רצפים ותכולת GC",
+    short: "תכולת GC",
+    level: "easy",
+    difficulty: "קל",
     minutes: 30,
-    topics: ["DNA stability", "Melting temperature", "Loops & counting"],
+    topics: ["יציבות DNA", "טמפרטורת התכה", "לולאות וספירה"],
     fnName: "gc_content",
 
     lesson: `
-<p class="eyebrow">Module 2 · Biology × Computer Science</p>
-<h1>Sequence Analysis &amp; GC Content</h1>
-<p class="lede">The proportion of G and C in a stretch of DNA is one of the simplest numbers in genomics, and one of the most useful. It predicts how strongly two strands hold together, it helps decide whether a PCR works, and it differs between species and even between regions of the same genome.</p>
+<p class="eyebrow">מודול 2 · ביולוגיה × מדעי המחשב</p>
+<h1>ניתוח רצפים ותכולת GC</h1>
+<p class="lede">השיעור היחסי של G ו-C בקטע DNA הוא אחד המספרים הפשוטים ביותר בגנומיקה, וגם אחד השימושיים ביותר. הוא מנבא עד כמה חזק שני הגדילים נצמדים זה לזה, עוזר לקבוע אם תגובת PCR תצליח, ומשתנה בין מינים ואפילו בין אזורים שונים באותו גנום.</p>
 
 <div class="objectives">
-  <div class="objectives-title">You will learn</div>
+  <div class="objectives-title">מה תלמדו</div>
   <ul>
-    <li>Why GC-rich DNA is more thermally stable</li>
-    <li>What melting temperature (T<sub>m</sub>) is and how to estimate it</li>
-    <li>The accumulator pattern: loops, counters and <code>Counter</code></li>
-    <li>How to handle edge cases defensively (empty input, mixed case)</li>
+    <li>למה DNA עשיר ב-GC יציב יותר בחום</li>
+    <li>מהי טמפרטורת התכה (T<sub>m</sub>) ואיך מעריכים אותה</li>
+    <li>תבנית הצובר: לולאות, מונים ו-<code>Counter</code></li>
+    <li>איך לטפל במקרי קצה בצורה הגנתית (קלט ריק, אותיות מעורבות)</li>
   </ul>
 </div>
 
-<h2><span class="h-num">1</span>What holds the double helix together?</h2>
-<p>Two kinds of non-covalent force keep the two DNA strands together:</p>
+<h2><span class="h-num">1</span>מה מחזיק את הסליל הכפול?</h2>
+<p>שני סוגים של כוחות לא-קוולנטיים מחזיקים את שני גדילי ה-DNA יחד:</p>
 <ul class="tight">
-  <li><strong>Hydrogen bonds</strong> between paired bases: <span class="pill pill-at">A=T has 2</span> and <span class="pill pill-gc">G≡C has 3</span>.</li>
-  <li><strong>Base stacking</strong>: the flat aromatic bases stack like coins and attract their neighbours above and below. Stacking actually contributes <em>more</em> stability than hydrogen bonding, and stacks that contain G·C are among the strongest.</li>
+  <li><strong>קשרי מימן</strong> בין בסיסים מזווגים: <span class="pill pill-at">ל-A=T יש 2</span> ו<span class="pill pill-gc">ל-G≡C יש 3</span>.</li>
+  <li><strong>ערימת בסיסים</strong> (base stacking): הבסיסים השטוחים והארומטיים נערמים כמו מטבעות ומושכים את שכניהם מלמעלה ומלמטה. הערימה תורמת למעשה <em>יותר</em> ליציבות מאשר קשרי המימן, וערימות שמכילות G·C הן מהחזקות ביותר.</li>
 </ul>
-<p>Both effects point the same way: <strong>the more G and C, the more energy it takes to pull the strands apart.</strong></p>
+<p>שני האפקטים פועלים באותו כיוון: <strong>ככל שיש יותר G ו-C, נדרשת יותר אנרגיה כדי להפריד את הגדילים.</strong></p>
 
 <div class="bond-demo">
   <div class="bond-pair">
-    <span class="nt nt-a">A</span><span class="hb hb-2"><i></i><i></i></span><span class="nt nt-t">T</span>
-    <span class="bond-cap">2 hydrogen bonds</span>
+    <span class="bond-row" dir="ltr"><span class="nt nt-a">A</span><span class="hb hb-2"><i></i><i></i></span><span class="nt nt-t">T</span></span>
+    <span class="bond-cap">2 קשרי מימן</span>
   </div>
   <div class="bond-pair">
-    <span class="nt nt-g">G</span><span class="hb hb-3"><i></i><i></i><i></i></span><span class="nt nt-c">C</span>
-    <span class="bond-cap">3 hydrogen bonds</span>
+    <span class="bond-row" dir="ltr"><span class="nt nt-g">G</span><span class="hb hb-3"><i></i><i></i><i></i></span><span class="nt nt-c">C</span></span>
+    <span class="bond-cap">3 קשרי מימן</span>
   </div>
 </div>
 
-<h2><span class="h-num">2</span>Melting temperature (T<sub>m</sub>)</h2>
-<p>Heat double-stranded DNA and the strands eventually separate (<em>denature</em>, or "melt"). The <strong>melting temperature</strong> is the temperature at which half of the molecules are single-stranded. Two classic approximations:</p>
+<h2><span class="h-num">2</span>טמפרטורת התכה (T<sub>m</sub>)</h2>
+<p>כשמחממים DNA דו-גדילי, הגדילים נפרדים בסופו של דבר (<em>דנטורציה</em>, או "התכה"). <strong>טמפרטורת ההתכה</strong> היא הטמפרטורה שבה מחצית מהמולקולות הפכו לחד-גדיליות. שני קירובים קלאסיים:</p>
 
 <div class="formula-card">
-  <div class="fc-row"><span class="fc-name">Wallace rule</span><span class="fc-when">short oligos, &lt; 14 nt</span></div>
-  <div class="fc-eq">T<sub>m</sub> = 2·(A + T) + 4·(G + C) &nbsp;°C</div>
-  <div class="fc-row"><span class="fc-name">GC-content formula</span><span class="fc-when">longer sequences</span></div>
-  <div class="fc-eq">T<sub>m</sub> = 64.9 + 41 · (G + C − 16.4) / N &nbsp;°C</div>
+  <div class="fc-row"><span class="fc-name">כלל Wallace</span><span class="fc-when">אוליגונוקלאוטידים קצרים, פחות מ-14 נוקלאוטידים</span></div>
+  <div class="fc-eq" dir="ltr">T<sub>m</sub> = 2·(A + T) + 4·(G + C) &nbsp;°C</div>
+  <div class="fc-row"><span class="fc-name">נוסחת תכולת GC</span><span class="fc-when">רצפים ארוכים יותר</span></div>
+  <div class="fc-eq" dir="ltr">T<sub>m</sub> = 64.9 + 41 · (G + C − 16.4) / N &nbsp;°C</div>
 </div>
-<p class="muted small">Professional tools (Primer3, for example) use <em>nearest-neighbour thermodynamics</em>, which add up the stacking energy of every adjacent pair of bases and correct for salt concentration. The formulas above are good first estimates.</p>
+<p class="muted small">כלים מקצועיים (למשל Primer3) משתמשים ב<em>תרמודינמיקה של שכנים קרובים</em> (nearest-neighbour): הם מסכמים את אנרגיית הערימה של כל זוג בסיסים סמוכים ומתקנים לפי ריכוז המלח. הנוסחאות שלמעלה הן הערכה ראשונה טובה.</p>
 
-<h3>Why biologists care</h3>
+<h3>למה זה חשוב לביולוגים</h3>
 <table class="table">
-  <thead><tr><th>Context</th><th>Why GC content matters</th></tr></thead>
+  <thead><tr><th>הקשר</th><th>למה תכולת GC חשובה</th></tr></thead>
   <tbody>
-    <tr><td><strong>PCR primer design</strong></td><td>Primers are designed for 40–60% GC and a T<sub>m</sub> around 52–65 °C, and the two primers of a pair should have similar T<sub>m</sub>. Too AT-rich and they fall off; too GC-rich and they bind to the wrong places.</td></tr>
-    <tr><td><strong>Genome biology</strong></td><td>GC content varies a lot between species: <em>Plasmodium falciparum</em> (malaria) ≈ 19%, human ≈ 41%, <em>Streptomyces coelicolor</em> ≈ 72%. It can be used as a "fingerprint" to spot horizontally transferred genes.</td></tr>
-    <tr><td><strong>Gene regulation</strong></td><td><em>CpG islands</em> are GC-rich stretches near the promoters of many human genes. Whether they are methylated helps switch those genes on or off.</td></tr>
-    <tr><td><strong>Sequencing QC</strong></td><td>Illumina reads with extreme GC are under-represented (GC bias). Tools like FastQC plot per-read GC% to catch contamination.</td></tr>
+    <tr><td><strong>תכנון פריימרים ל-PCR</strong></td><td>פריימרים מתוכננים עם 40–60% GC וטמפרטורת T<sub>m</sub> של כ-52–65 °C, ולשני הפריימרים בזוג צריכות להיות טמפרטורות דומות. פריימר עשיר מדי ב-AT נופל מהתבנית; פריימר עשיר מדי ב-GC נקשר למקומות הלא נכונים.</td></tr>
+    <tr><td><strong>ביולוגיה של גנומים</strong></td><td>תכולת GC משתנה מאוד בין מינים: <em>Plasmodium falciparum</em> (טפיל המלריה) כ-19%, האדם כ-41%, <em>Streptomyces coelicolor</em> כ-72%. אפשר להשתמש בה כ"טביעת אצבע" כדי לזהות גנים שהגיעו בהעברה אופקית.</td></tr>
+    <tr><td><strong>בקרת ביטוי גנים</strong></td><td><em>איי CpG</em> הם מקטעים עשירים ב-GC ליד הפרומוטורים של גנים אנושיים רבים. מצב המתילציה שלהם עוזר להפעיל או לכבות את הגנים האלה.</td></tr>
+    <tr><td><strong>בקרת איכות בריצוף</strong></td><td>קריאות Illumina עם GC קיצוני מיוצגות בחסר (GC bias). כלים כמו FastQC משרטטים את אחוז ה-GC בכל קריאה כדי לזהות זיהומים.</td></tr>
   </tbody>
 </table>
 
-<h2><span class="h-num">3</span>Visual Lab: GC content and DNA melting</h2>
-<p>Edit the sequence or generate a random one with a chosen GC bias. Then <strong>raise the temperature</strong>. In this simplified model each base pair melts once the temperature passes a local threshold set by the GC content of its neighbourhood. AT-rich regions open first, the same "breathing" seen in real DNA.</p>
+<h2><span class="h-num">3</span>מעבדה חזותית: תכולת GC והתכת DNA</h2>
+<p>ערכו את הרצף, או צרו רצף אקראי עם הטיית GC לבחירתכם. אחר כך <strong>העלו את הטמפרטורה</strong>. במודל המפושט הזה, כל זוג בסיסים נמס כשהטמפרטורה עוברת סף מקומי שנקבע לפי תכולת ה-GC בסביבתו. אזורים עשירים ב-AT נפתחים ראשונים, בדומה ל"נשימה" של DNA אמיתי.</p>
 <div data-viz="gc"></div>
 
-<h2><span class="h-num">4</span>Loops, counting and the accumulator pattern</h2>
-<p>Most sequence statistics follow one pattern: <strong>start a counter, walk the sequence once, update the counter, then combine the result.</strong></p>
+<h2><span class="h-num">4</span>לולאות, ספירה ותבנית הצובר</h2>
+<p>רוב הסטטיסטיקות על רצפים פועלות לפי אותה תבנית: <strong>מאתחלים מונה, עוברים על הרצף פעם אחת, מעדכנים את המונה ובסוף משלבים את התוצאה.</strong></p>
 ${py(`
 dna = "AGCTATAG"
 
@@ -304,7 +393,7 @@ for base in dna:            # 2. visit every element once
 percent = gc / len(dna) * 100   # 4. combine -> 37.5
 `)}
 
-<h3>More Pythonic alternatives</h3>
+<h3>חלופות בסגנון Python</h3>
 ${py(`
 # Membership test on a small string instead of chained ==
 gc = sum(1 for base in dna if base in "GC")
@@ -319,19 +408,19 @@ gc = counts["G"] + counts["C"]
 `)}
 
 <div class="callout callout-cs">
-  <div class="callout-title">Division in Python 3</div>
-  <p><code>/</code> is <em>true division</em> and always returns a <code>float</code>: <code>3 / 8 == 0.375</code>. <code>//</code> is floor division: <code>3 // 8 == 0</code>. Many Python 2-era bioinformatics scripts silently reported a GC content of 0 because of this.</p>
+  <div class="callout-title">חילוק ב-Python 3</div>
+  <p><code>/</code> הוא <em>חילוק אמיתי</em> ותמיד מחזיר <code>float</code>: <code>3 / 8 == 0.375</code>. ואילו <code>//</code> הוא חילוק שלמים (עיגול כלפי מטה): <code>3 // 8 == 0</code>. סקריפטים ביואינפורמטיים רבים מתקופת Python 2 דיווחו בשקט על תכולת GC של 0 בגלל ההבדל הזה.</p>
 </div>
 
-<h3>Defensive programming: think about the edges</h3>
-<p>Before you write the main logic, list the inputs that could break it:</p>
+<h3>תכנות הגנתי: חשבו על הקצוות</h3>
+<p>לפני שכותבים את הלוגיקה המרכזית, כדאי לרשום את הקלטים שעלולים לשבור אותה:</p>
 <ul class="tight">
-  <li><strong>Empty sequence</strong>: <code>len(dna) == 0</code> leads to <code>ZeroDivisionError</code>. Decide on a sensible answer (here: <code>0.0</code>).</li>
-  <li><strong>Lowercase</strong>: <code>"gc"</code> is still G and C. Normalise first with <code>dna.upper()</code>.</li>
-  <li><strong>Floating point</strong>: <code>1/3*100</code> is <code>33.33333333333333</code>. Tests compare with a tolerance, so do not round inside the function. Round only when you display a value.</li>
+  <li><strong>רצף ריק</strong>: <code>len(dna) == 0</code> גורם ל-<code>ZeroDivisionError</code>. החליטו על תשובה הגיונית (כאן: <code>0.0</code>).</li>
+  <li><strong>אותיות קטנות</strong>: <code>"gc"</code> הם עדיין G ו-C. נרמלו קודם בעזרת <code>dna.upper()</code>.</li>
+  <li><strong>נקודה צפה</strong>: <code>1/3*100</code> שווה <code>33.33333333333333</code>. הבדיקות משוות עם סובלנות, ולכן אל תעגלו בתוך הפונקציה. עגלו רק כשמציגים ערך.</li>
 </ul>
 
-<h3>Parsing FASTA, the lingua franca of sequence files</h3>
+<h3>פענוח FASTA, שפת האם של קובצי רצפים</h3>
 ${py(`
 fasta = """>Rosalind_6404
 CCTGCGGAAGATCGGCACTAGAATAGCCAGAACCGTTTCTCTGAGGCTTCCGGCCTTCCC
@@ -344,36 +433,144 @@ print(header, len(seq))            # Rosalind_6404 80
 `)}
 
 <div class="complexity">
-  <div><span class="cx-label">Time</span><span class="cx-val">O(n)</span><span class="cx-note">one pass (or two quick passes with str.count)</span></div>
-  <div><span class="cx-label">Space</span><span class="cx-val">O(1)</span><span class="cx-note">a fixed number of counters, whatever the input size</span></div>
+  <div><span class="cx-label">זמן</span><span class="cx-val" dir="ltr">O(n)</span><span class="cx-note">מעבר אחד (או שני מעברים מהירים עם str.count)</span></div>
+  <div><span class="cx-label">זיכרון</span><span class="cx-val" dir="ltr">O(1)</span><span class="cx-note">מספר קבוע של מונים, בלי קשר לגודל הקלט</span></div>
 </div>
 
-<h2><span class="h-num">5</span>Your task</h2>
-<p>Implement <code>gc_content(dna)</code>. The <strong>hidden tests</strong> include an empty string and mixed-case input, so handle the edge cases above.</p>
+<h2><span class="h-num">5</span>דוגמאות קוד</h2>
+${examplesIntro}
+
+${demo({
+  title: "חישוב טמפרטורת התכה לפריימרים",
+  intro: "בתכנון ניסוי PCR צריך לוודא שלפריימרים יש טמפרטורת התכה מתאימה. הפונקציה הזו בוחרת אוטומטית את הנוסחה המתאימה לאורך הפריימר.",
+  code: `
+def melting_temp(primer):
+    primer = primer.upper()
+    n = len(primer)
+    at = primer.count("A") + primer.count("T")
+    gc = primer.count("G") + primer.count("C")
+    if n < 14:
+        return 2 * at + 4 * gc            # Wallace rule
+    return 64.9 + 41 * (gc - 16.4) / n    # GC-based formula
+
+primers = {
+    "short":   "ATGCGTAC",
+    "M13_fwd": "GTAAAACGACGGCCAGT",
+    "M13_rev": "AGCGGATAACAATTTCACACAGG",
+}
+
+for name, seq in primers.items():
+    print(f"{name:<8} {seq:<24} len={len(seq):>2}  Tm={melting_temp(seq):5.1f} C")
+`,
+  steps: [
+    `<code>primer.upper()</code> מנרמל את הרצף לאותיות גדולות, כך שגם פריימר שנכתב באותיות קטנות ייספר נכון.`,
+    `<code>primer.count(...)</code> סופר כל בסיס במעבר מהיר שממומש ב-C. את A ו-T סוכמים יחד (2 קשרי מימן לכל זוג), ואת G ו-C יחד (3 קשרי מימן).`,
+    `<code>if n &lt; 14</code> בוחר בין הנוסחאות: לפריימרים קצרים משתמשים בכלל Wallace, ולארוכים בנוסחה שמבוססת על תכולת ה-GC ביחס לאורך.`,
+    `המילון <code>primers</code> מחזיק שם ורצף לכל פריימר, והלולאה <code>for name, seq in primers.items()</code> עוברת על הזוגות לפי סדר ההכנסה.`,
+    `ה-f-string מעצב את הפלט כטבלה: <code>{name:&lt;8}</code> מיישר לשמאל ברוחב 8 תווים, ו-<code>{...:5.1f}</code> מציג מספר עשרוני עם ספרה אחת אחרי הנקודה.`,
+    `קראו את התוצאה: לזוג פריימרים שעובד יחד צריכות להיות טמפרטורות קרובות, בדרך כלל בהפרש של עד כ-5 מעלות. בין שני פריימרי M13 מתקבל כאן הפרש של כ-6 מעלות, אבל הנוסחאות הפשוטות האלה גסות. לפני שמתכננים מחדש, בודקים עם כלי מדויק יותר כמו Primer3.`,
+  ],
+})}
+
+${demo({
+  title: "GC skew: איתור נקודת ההתחלה של השכפול",
+  intro: "<em>GC skew</em> הוא ההפרש המצטבר בין מספר ה-G למספר ה-C לאורך הגנום. בחיידקים, הנקודה שבה הוא מגיע למינימום מסמנת לרוב את <strong>ori</strong>, נקודת ההתחלה של השכפול.",
+  code: `
+genome = "CATGGGCATCGGCCATACGCC"
+
+skew = [0]
+for base in genome:
+    if base == "G":
+        skew.append(skew[-1] + 1)
+    elif base == "C":
+        skew.append(skew[-1] - 1)
+    else:
+        skew.append(skew[-1])
+
+print("Skew:", skew)
+
+lowest = min(skew)
+positions = [i for i, value in enumerate(skew) if value == lowest]
+print("Minimum skew", lowest, "at positions", positions)
+`,
+  steps: [
+    `הרשימה <code>skew</code> מתחילה ב-<code>[0]</code>: לפני שקראנו בסיס כלשהו, ההפרש הוא אפס. לכן בסוף יהיו בה <code>len(genome) + 1</code> ערכים.`,
+    `בכל צעד לוקחים את הערך האחרון, <code>skew[-1]</code>, ומוסיפים 1 עבור G, מחסירים 1 עבור C, או משאירים אותו כפי שהוא עבור A ו-T. זו שוב תבנית הצובר, רק שהפעם שומרים את כל ערכי הביניים.`,
+    `<code>min(skew)</code> מוצא את הערך הנמוך ביותר במעבר אחד על הרשימה.`,
+    `רשימת ההבנה (list comprehension) עם <code>enumerate</code> אוספת את <em>כל</em> העמדות שבהן מתקבל המינימום, כי ייתכן שיש יותר מאחת.`,
+    `הרעיון הביולוגי: במהלך השכפול, אחד הגדילים נשאר חד-גדילי זמן רב יותר, ובו ציטוזין נוטה לעבור דאמינציה. כך נוצר מחסור ב-C בחצי אחד של הגנום, והמעבר בין החצאים מסמן את ה-ori.`,
+  ],
+})}
+
+${demo({
+  title: "קריאת קובץ multi-FASTA וספירת הרכב הבסיסים",
+  intro: "בקבצים אמיתיים יש בדרך כלל כמה רצפים, וכל אחד מהם שבור לכמה שורות. הדוגמה קוראת קובץ multi-FASTA ומדפיסה את הרכב הבסיסים של כל רשומה.",
+  code: `
+from collections import Counter
+
+fasta = """>seq_alpha
+ATATTTAAGC
+GCATAT
+>seq_beta
+GGCCGCGTAA
+CCGG
+>seq_gamma
+ATGCATGCAT"""
+
+records = {}
+name = None
+for line in fasta.splitlines():
+    line = line.strip()
+    if not line:
+        continue
+    if line.startswith(">"):
+        name = line[1:]
+        records[name] = []
+    else:
+        records[name].append(line)
+
+for name, parts in records.items():
+    seq = "".join(parts)
+    counts = Counter(seq)
+    composition = ", ".join(f"{b}={counts[b]}" for b in "ACGT")
+    print(f"{name:<10} length={len(seq):>2}  {composition}")
+`,
+  steps: [
+    `<code>fasta.splitlines()</code> מפרק את הטקסט לשורות, ו-<code>line.strip()</code> מסיר רווחים ותווי שורה חדשה. שורות ריקות מדולגות בעזרת <code>continue</code>.`,
+    `שורה שמתחילה ב-<code>&gt;</code> היא כותרת: <code>line[1:]</code> מסיר את התו <code>&gt;</code>, ובמילון <code>records</code> נפתחת רשימה ריקה עבור הרשומה החדשה.`,
+    `כל שורה אחרת שייכת לרשומה האחרונה שנפתחה, ולכן מוסיפים אותה לרשימה <code>records[name]</code>.`,
+    `אחרי הקריאה, <code>"".join(parts)</code> מחבר את השורות השבורות לרצף רציף אחד.`,
+    `<code>Counter(seq)</code> סופר את כל התווים במעבר אחד ומחזיר מילון מיוחד. <code>counts[b]</code> מחזיר 0 עבור בסיס שלא הופיע, בלי <code>KeyError</code>.`,
+    `מכאן הדרך לתכולת GC קצרה: מחברים את <code>counts["G"]</code> ו-<code>counts["C"]</code> ומחלקים באורך. את זה תממשו בתרגיל, כולל מקרי הקצה.`,
+  ],
+})}
+
+<h2><span class="h-num">6</span>המשימה שלכם</h2>
+<p>ממשו את <code>gc_content(dna)</code>. <strong>הבדיקות הנסתרות</strong> כוללות מחרוזת ריקה וקלט עם אותיות גדולות וקטנות, אז טפלו במקרי הקצה שתוארו למעלה.</p>
 `,
 
     problem: {
       statement: `
-<p>The <strong>GC content</strong> of a DNA string is the percentage of its symbols that are <code>"C"</code> or <code>"G"</code>. For example, <code>"AGCTATAG"</code> contains 3 G/C out of 8 bases, so its GC content is <code>37.5</code>.</p>
-<p>Implement <code>gc_content(dna)</code> so it returns the GC content as a <strong>percentage</strong> (a <code>float</code> between 0 and 100).</p>
+<p><strong>תכולת ה-GC</strong> של מחרוזת DNA היא אחוז הסמלים בה שהם <code>"C"</code> או <code>"G"</code>. לדוגמה, <code>"AGCTATAG"</code> מכילה 3 בסיסי G/C מתוך 8, ולכן תכולת ה-GC שלה היא <code>37.5</code>.</p>
+<p>ממשו את <code>gc_content(dna)</code> כך שתחזיר את תכולת ה-GC <strong>כאחוז</strong> (<code>float</code> בין 0 ל-100).</p>
 <ul class="tight">
-  <li>Count case-insensitively: <code>"g"</code> and <code>"c"</code> count too.</li>
-  <li>If the sequence is empty, return <code>0.0</code>. Do not raise.</li>
+  <li>ספרו בלי תלות בגודל האות: גם <code>"g"</code> ו-<code>"c"</code> נספרים.</li>
+  <li>אם הרצף ריק, החזירו <code>0.0</code>. אל תזרקו חריגה.</li>
 </ul>`,
       examples: [
-        { input: 'dna = "AGCTATAG"', output: "37.5", explanation: "G, C, G are 3 of 8 bases → 3 / 8 × 100 = 37.5" },
+        { input: 'dna = "AGCTATAG"', output: "37.5", explanation: "G, ‏C ו-G הם 3 מתוך 8 בסיסים, כלומר 3 / 8 × 100 = 37.5" },
         { input: 'dna = "GGCC"', output: "100.0" },
-        { input: 'dna = ""', output: "0.0", explanation: "No bases, so there is nothing to divide. Guard against ZeroDivisionError." },
+        { input: 'dna = ""', output: "0.0", explanation: "אין בסיסים, ולכן אין במה לחלק. הגנו מפני ZeroDivisionError." },
       ],
       constraints: [
         "<code>0 ≤ len(dna) ≤ 10<sup>5</sup></code>",
-        "Characters are drawn from <code>ACGTacgt</code>",
-        "Answers are accepted within an absolute error of <code>10<sup>-3</sup></code>",
+        "התווים לקוחים מתוך <code>ACGTacgt</code>",
+        "תשובות מתקבלות בשגיאה מוחלטת של עד <code>10<sup>-3</sup></code>",
       ],
       hints: [
-        "Count how many characters are G or C, then divide by the total length.",
-        "<code>dna.upper()</code> normalises the case in one step.",
-        "Check <code>if not dna:</code> before dividing.",
+        "ספרו כמה תווים הם G או C, וחלקו באורך הכולל.",
+        "<code>dna.upper()</code> מנרמלת את גודל האותיות בצעד אחד.",
+        "בדקו <code>if not dna:</code> לפני החילוק.",
       ],
     },
 
@@ -410,69 +607,70 @@ print(header, len(seq))            # Rosalind_6404 80
   const m3 = {
     id: "m3",
     number: 3,
-    title: "Mutations & Hamming Distance",
-    short: "Hamming Distance",
-    difficulty: "Easy",
+    title: "מוטציות ומרחק המינג",
+    short: "מרחק המינג",
+    level: "easy",
+    difficulty: "קל",
     minutes: 30,
-    topics: ["SNPs", "Evolutionary distance", "zip & Big-O"],
+    topics: ["SNPs", "מרחק אבולוציוני", "zip ו-Big-O"],
     fnName: "hamming_distance",
 
     lesson: `
-<p class="eyebrow">Module 3 · Biology × Computer Science</p>
-<h1>Mutations &amp; Hamming Distance</h1>
-<p class="lede">Two copies of a genome are never exactly the same. Measuring <em>how</em> different two sequences are is the starting point for variant calling, population genetics and building the tree of life. The simplest such measure is the Hamming distance.</p>
+<p class="eyebrow">מודול 3 · ביולוגיה × מדעי המחשב</p>
+<h1>מוטציות ומרחק המינג</h1>
+<p class="lede">אין שני עותקים זהים לחלוטין של גנום. מדידת <em>מידת</em> השוני בין שני רצפים היא נקודת המוצא לזיהוי וריאנטים, לגנטיקה של אוכלוסיות ולבניית עץ החיים. המדד הפשוט ביותר מהסוג הזה הוא מרחק המינג.</p>
 
 <div class="objectives">
-  <div class="objectives-title">You will learn</div>
+  <div class="objectives-title">מה תלמדו</div>
   <ul>
-    <li>Types of mutations: transitions, transversions, indels</li>
-    <li>What a SNP is and why there are millions of them in you</li>
-    <li>How mismatch counts become evolutionary distance</li>
-    <li>Iterating over two sequences together, and what O(n) really means</li>
+    <li>סוגי מוטציות: טרנזיציות, טרנסברזיות ואינדלים</li>
+    <li>מהו SNP ולמה יש מיליונים כאלה אצל כל אחד מאיתנו</li>
+    <li>איך ספירת אי-התאמות הופכת למרחק אבולוציוני</li>
+    <li>מעבר על שני רצפים במקביל, ומה באמת פירוש O(n)</li>
   </ul>
 </div>
 
-<h2><span class="h-num">1</span>Point mutations</h2>
-<p>A <strong>point mutation</strong> changes a single nucleotide. Polymerase errors, chemical damage, UV light and failed repair all cause them. Substitutions come in two kinds:</p>
+<h2><span class="h-num">1</span>מוטציות נקודתיות</h2>
+<p><strong>מוטציה נקודתית</strong> משנה נוקלאוטיד בודד. היא נגרמת משגיאות של הפולימראז, מנזק כימי, מקרינת UV ומכשלים במנגנוני התיקון. התמרות (substitutions) מתחלקות לשני סוגים:</p>
 
 <div class="mut-grid">
   <div class="mut-card mut-ts">
-    <div class="mut-title">Transition</div>
-    <div class="mut-ex">${nt("A")} ↔ ${nt("G")} &nbsp; ${nt("C")} ↔ ${nt("T")}</div>
-    <p>A purine is swapped for a purine, or a pyrimidine for a pyrimidine. The shapes are similar, so these are about <strong>2× more frequent</strong> in practice.</p>
+    <div class="mut-title">טרנזיציה (Transition)</div>
+    <div class="mut-ex" dir="ltr">${nt("A")} ↔ ${nt("G")} &nbsp; ${nt("C")} ↔ ${nt("T")}</div>
+    <p>פורין מוחלף בפורין, או פירימידין בפירימידין. הצורות דומות, ולכן בפועל הן <strong>שכיחות פי 2 בערך</strong>.</p>
   </div>
   <div class="mut-card mut-tv">
-    <div class="mut-title">Transversion</div>
-    <div class="mut-ex">${nt("A")} ↔ ${nt("C")} &nbsp; ${nt("G")} ↔ ${nt("T")} …</div>
-    <p>A purine is swapped for a pyrimidine, or the reverse. There are twice as many possible transversions, yet they happen less often.</p>
+    <div class="mut-title">טרנסברזיה (Transversion)</div>
+    <div class="mut-ex" dir="ltr">${nt("A")} ↔ ${nt("C")} &nbsp; ${nt("G")} ↔ ${nt("T")} …</div>
+    <p>פורין מוחלף בפירימידין, או להפך. יש פי שניים טרנסברזיות אפשריות, ובכל זאת הן מתרחשות לעיתים רחוקות יותר.</p>
   </div>
 </div>
 
-<p>Inside a protein-coding gene, the effect of a substitution depends on the genetic code:</p>
+<p>בתוך גן שמקודד לחלבון, ההשפעה של התמרה תלויה בקוד הגנטי:</p>
 <ul class="tight">
-  <li><strong>Synonymous (silent)</strong>: the codon changes but the amino acid does not (e.g. <code>GAA</code>→<code>GAG</code>, both Glu).</li>
-  <li><strong>Missense</strong>: the amino acid changes. The classic example is <strong>sickle-cell disease</strong>: one A→T transversion in the <em>HBB</em> gene turns <code>GAG</code> (Glu) into <code>GTG</code> (Val) at position 6 of β-globin.</li>
-  <li><strong>Nonsense</strong>: a premature stop codon cuts the protein short.</li>
+  <li><strong>סינונימית (שקטה)</strong>: הקודון משתנה, אבל חומצת האמינו לא (למשל <code>GAA</code>→<code>GAG</code>, שניהם Glu).</li>
+  <li><strong>Missense</strong>: חומצת האמינו משתנה. הדוגמה הקלאסית היא <strong>אנמיה חרמשית</strong>: טרנסברזיה אחת של A→T בגן <em>HBB</em> הופכת את <code>GAG</code> (Glu) ל-<code>GTG</code> (Val) בעמדה 6 של β-גלובין.</li>
+  <li><strong>Nonsense</strong>: קודון עצירה מוקדם קוטע את החלבון.</li>
 </ul>
-<p><strong>Indels</strong> (insertions and deletions) also exist, but they shift the alignment. Hamming distance assumes the two sequences are already aligned and the same length, so it only counts substitutions. Indels need the alignment algorithms you will meet later (Needleman–Wunsch, Smith–Waterman).</p>
+<p>קיימים גם <strong>אינדלים</strong> (indels: הכנסות והשמטות), אבל הם מזיזים את היישור. מרחק המינג מניח ששני הרצפים כבר מיושרים ובאותו אורך, ולכן הוא סופר רק התמרות. אינדלים דורשים אלגוריתמי יישור שתפגשו בהמשך (Needleman–Wunsch, ‏Smith–Waterman).</p>
 
-<h2><span class="h-num">2</span>SNPs: the variation that makes you, you</h2>
-<p>A <strong>single-nucleotide polymorphism (SNP)</strong> is a position where different people commonly carry different bases (by convention, the minor allele has ≥ 1% frequency in a population). Any human genome differs from the reference at roughly <strong>4–5 million</strong> sites. SNPs are behind genome-wide association studies (GWAS), ancestry inference, pharmacogenomics and forensic identification.</p>
+<h2><span class="h-num">2</span>SNP: השונות שהופכת אתכם לייחודיים</h2>
+<p><strong>פולימורפיזם של נוקלאוטיד בודד (SNP)</strong> הוא עמדה בגנום שבה אנשים שונים נושאים לעיתים קרובות בסיסים שונים (לפי המוסכמה, לאלל הנדיר יש שכיחות של 1% לפחות באוכלוסייה). כל גנום אנושי שונה מגנום הייחוס בכ-<strong>4–5 מיליון</strong> עמדות. SNPs עומדים בבסיס מחקרי אסוציאציה גנומיים (GWAS), הסקת מוצא, פרמקוגנומיקה וזיהוי פורנזי.</p>
 
-<h2><span class="h-num">3</span>From mismatches to evolutionary distance</h2>
-<p>Divide the Hamming distance <em>d</em> by the alignment length <em>L</em> to get the <strong>p-distance</strong>, the proportion of sites that differ:</p>
+<h2><span class="h-num">3</span>מאי-התאמות למרחק אבולוציוני</h2>
+<p>מחלקים את מרחק המינג <em>d</em> באורך היישור <em>L</em> ומקבלים את <strong>p-distance</strong>, שיעור העמדות השונות:</p>
 <div class="formula-card">
-  <div class="fc-eq">p = d<sub>H</sub> / L</div>
-  <div class="fc-row"><span class="fc-name">Jukes–Cantor correction (1969)</span><span class="fc-when">accounts for multiple hits</span></div>
-  <div class="fc-eq">d<sub>JC</sub> = −¾ · ln(1 − 4p/3)</div>
+  <div class="fc-eq" dir="ltr">p = d<sub>H</sub> / L</div>
+  <div class="fc-row"><span class="fc-name">תיקון Jukes–Cantor ‏(1969)</span><span class="fc-when">מתחשב בפגיעות מרובות</span></div>
+  <div class="fc-eq" dir="ltr">d<sub>JC</sub> = −¾ · ln(1 − 4p/3)</div>
 </div>
-<p>Why correct at all? Over long timescales the same site can mutate more than once (A→G→A). Those changes are invisible, so the raw <em>p</em> <em>underestimates</em> the true number of substitutions. The JC69 model inverts a simple Markov chain to recover it. As <em>p</em> nears 0.75, the value you would expect between two random sequences, the distance goes to infinity: the signal is saturated.</p>
+<p>למה בכלל לתקן? לאורך זמנים ארוכים, אותה עמדה יכולה לעבור מוטציה יותר מפעם אחת (A→G→A). שינויים כאלה בלתי נראים, ולכן <em>p</em> הגולמי <em>מעריך בחסר</em> את המספר האמיתי של ההתמרות. מודל JC69 הופך שרשרת מרקוב פשוטה כדי לשחזר אותו. כש-<em>p</em> מתקרב ל-0.75, הערך הצפוי בין שני רצפים אקראיים, המרחק שואף לאינסוף: האות רווי.</p>
 
-<h2><span class="h-num">4</span>Visual Lab: compare two strands</h2>
-<p>Edit either strand, click <strong>Mutate</strong> to add a random point mutation, or <strong>Scan</strong> to watch the algorithm walk both strings and count differences. Transitions are shown in amber, transversions in red.</p>
+<h2><span class="h-num">4</span>מעבדה חזותית: השוואת שני גדילים</h2>
+<p>ערכו כל אחד מהגדילים, לחצו <strong>מוטציה</strong> כדי להוסיף מוטציה נקודתית אקראית, או <strong>סריקה</strong> כדי לצפות באלגוריתם עובר על שתי המחרוזות וסופר הבדלים. טרנזיציות מסומנות בכתום, וטרנסברזיות באדום.</p>
 <div data-viz="hamming"></div>
 
-<h2><span class="h-num">5</span>Iterating over two strings at once</h2>
+<h2><span class="h-num">5</span>מעבר על שתי מחרוזות במקביל</h2>
 ${py(`
 s, t = "GAGCCTACTAACGGGAT", "CATCGTAATGACGGCCT"
 
@@ -496,54 +694,133 @@ diffs = [i for i, (a, b) in enumerate(zip(s, t)) if a != b]
 `)}
 
 <div class="callout callout-warn">
-  <div class="callout-title">The silent <code>zip</code> trap</div>
-  <p><code>zip</code> <strong>stops at the shorter input without warning</strong>. <code>sum(a != b for a, b in zip("ACGT", "AC"))</code> returns <code>0</code>, which is wrong. Hamming distance is undefined for sequences of different lengths, so check explicitly and <code>raise ValueError(...)</code>. On Python ≥ 3.10 you can also write <code>zip(s, t, strict=True)</code>.</p>
+  <div class="callout-title">המלכודת השקטה של <code>zip</code></div>
+  <p><code>zip</code> <strong>עוצר בקלט הקצר יותר בלי שום אזהרה</strong>. הביטוי <code>sum(a != b for a, b in zip("ACGT", "AC"))</code> מחזיר <code>0</code>, וזה שגוי. מרחק המינג אינו מוגדר לרצפים באורכים שונים, ולכן בדקו זאת במפורש וזרקו <code>raise ValueError(...)</code>. ב-Python ‏3.10 ומעלה אפשר גם לכתוב <code>zip(s, t, strict=True)</code>.</p>
 </div>
 
-<h3>Big-O: how does the work grow?</h3>
-<p><strong>Time complexity</strong> describes how running time grows with the input size <em>n</em>, ignoring constant factors. Hamming distance looks at each position exactly once, so it is <strong>O(n)</strong>, or <em>linear</em>: double the sequence length and the work roughly doubles.</p>
+<h3>Big-O: איך העבודה גדלה?</h3>
+<p><strong>סיבוכיות זמן</strong> מתארת איך זמן הריצה גדל ביחס לגודל הקלט <em>n</em>, תוך התעלמות מגורמים קבועים. מרחק המינג בודק כל עמדה בדיוק פעם אחת, ולכן הוא <strong>O(n)</strong>, כלומר <em>לינארי</em>: אם מכפילים את אורך הרצף, העבודה בערך מוכפלת.</p>
 <table class="table">
-  <thead><tr><th>Class</th><th>Example</th><th>n = 3×10⁹ (human genome)</th></tr></thead>
+  <thead><tr><th>מחלקה</th><th>דוגמה</th><th>n = 3×10⁹ (הגנום האנושי)</th></tr></thead>
   <tbody>
-    <tr><td><code>O(1)</code></td><td>read <code>dna[42]</code></td><td>instant</td></tr>
-    <tr><td><code>O(n)</code></td><td>Hamming distance, GC content</td><td>seconds</td></tr>
-    <tr><td><code>O(n log n)</code></td><td>sorting k-mers</td><td>minutes</td></tr>
-    <tr><td><code>O(n²)</code></td><td>naive all-pairs comparison</td><td>longer than the age of the universe</td></tr>
+    <tr><td><code>O(1)</code></td><td>קריאת <code>dna[42]</code></td><td>מיידי</td></tr>
+    <tr><td><code>O(n)</code></td><td>מרחק המינג, תכולת GC</td><td>שניות</td></tr>
+    <tr><td><code>O(n log n)</code></td><td>מיון k-mers</td><td>דקות</td></tr>
+    <tr><td><code>O(n²)</code></td><td>השוואה נאיבית של כל הזוגות</td><td>יותר מגיל היקום</td></tr>
   </tbody>
 </table>
 
 <div class="complexity">
-  <div><span class="cx-label">Time</span><span class="cx-val">O(n)</span><span class="cx-note">one comparison per aligned position</span></div>
-  <div><span class="cx-label">Space</span><span class="cx-val">O(1)</span><span class="cx-note">zip and generators are lazy, so no copies are made</span></div>
+  <div><span class="cx-label">זמן</span><span class="cx-val" dir="ltr">O(n)</span><span class="cx-note">השוואה אחת לכל עמדה מיושרת</span></div>
+  <div><span class="cx-label">זיכרון</span><span class="cx-val" dir="ltr">O(1)</span><span class="cx-note">zip וגנרטורים הם עצלים, ולכן לא נוצרים עותקים</span></div>
 </div>
 
-<h2><span class="h-num">6</span>Your task</h2>
-<p>Implement <code>hamming_distance(seq1, seq2)</code>. Hidden tests check that you <strong>raise <code>ValueError</code></strong> when the lengths differ.</p>
+<h2><span class="h-num">6</span>דוגמאות קוד</h2>
+${examplesIntro}
+
+${demo({
+  title: "דוח מוטציות: מיקום וסוג של כל שינוי",
+  intro: "בניתוח וריאנטים לא מספיק לדעת <em>כמה</em> הבדלים יש; רוצים לדעת <em>איפה</em> הם ומאיזה סוג. הדוגמה מפיקה דוח מוטציות ומחשבת את היחס בין טרנזיציות לטרנסברזיות (Ts/Tv).",
+  code: `
+PURINES = {"A", "G"}
+
+def classify(a, b):
+    if a == b:
+        return None
+    same_class = (a in PURINES) == (b in PURINES)
+    return "transition" if same_class else "transversion"
+
+ref = "GAGCCTACTAACGGGAT"
+alt = "CATCGTAATGACGGCCT"
+
+ts = tv = 0
+for i, (a, b) in enumerate(zip(ref, alt)):
+    kind = classify(a, b)
+    if kind:
+        print(f"pos {i:>2}: {a} -> {b}  {kind}")
+        if kind == "transition":
+            ts += 1
+        else:
+            tv += 1
+
+print(f"transitions={ts}, transversions={tv}, Ts/Tv={ts / tv:.2f}")
+`,
+  steps: [
+    `<code>PURINES</code> היא קבוצה (set), ולכן בדיקת השייכות <code>a in PURINES</code> מהירה מאוד. כל בסיס שאינו פורין הוא פירימידין.`,
+    `<code>classify(a, b)</code> מחזירה <code>None</code> כשהבסיסים זהים. אחרת היא בודקת אם שניהם מאותה מחלקה: הביטוי <code>(a in PURINES) == (b in PURINES)</code> הוא <code>True</code> כששניהם פורינים או ששניהם פירימידינים, כלומר כשמדובר בטרנזיציה.`,
+    `<code>enumerate(zip(ref, alt))</code> מחזיר בכל צעד את האינדקס יחד עם זוג התווים המיושרים. הפירוק <code>i, (a, b)</code> פותח את שני המבנים בבת אחת.`,
+    `<code>if kind:</code> מדלג על התאמות, כי <code>None</code> נחשב ערך שקרי. עבור כל אי-התאמה מדפיסים שורה ומגדילים את המונה המתאים.`,
+    `בסוף מחשבים את יחס Ts/Tv. בנתוני אדם אמיתיים הוא בדרך כלל כ-2.0–2.1 בגנום כולו, וערך נמוך בהרבה הוא סימן אזהרה לשגיאות ריצוף. כאן היחס נמוך כי מדובר ברצפים קצרים לדוגמה, ולא בנתונים ביולוגיים.`,
+  ],
+})}
+
+${demo({
+  title: "מטריצת מרחקים אבולוציוניים (Jukes–Cantor)",
+  intro: "בפילוגנטיקה בונים מטריצה של מרחקים בין כל זוג מינים, ומשם עץ. הדוגמה מחשבת מטריצה כזו עם תיקון Jukes–Cantor.",
+  code: `
+import math
+
+species = {
+    "human":   "ACGTTGCAAGTCCATGCATA",
+    "chimp":   "ACGTTGCAAGTCCATGCGTA",
+    "gorilla": "ACGTTGCATGTCCATACGTA",
+    "mouse":   "ACCTTGGAAGTACCTGAGTC",
+}
+
+def p_distance(s, t):
+    diffs = sum(a != b for a, b in zip(s, t))
+    return diffs / len(s)
+
+def jukes_cantor(p):
+    if p == 0:
+        return 0.0
+    if p >= 0.75:
+        return float("inf")
+    return -0.75 * math.log(1 - 4 * p / 3)
+
+names = list(species)
+print(" " * 8 + "".join(f"{n:>9}" for n in names))
+for a in names:
+    row = [jukes_cantor(p_distance(species[a], species[b])) for b in names]
+    print(f"{a:<8}" + "".join(f"{d:>9.3f}" for d in row))
+`,
+  steps: [
+    `<code>p_distance</code> סופרת אי-התאמות בעזרת <code>sum(a != b for ...)</code> ומחלקת באורך. זהו מרחק המינג מנורמל.`,
+    `<code>jukes_cantor</code> מיישמת את הנוסחה <code>-0.75 * log(1 - 4p/3)</code>. כש-<code>p</code> מגיע ל-0.75 הלוגריתם אינו מוגדר, ולכן מחזירים <code>float("inf")</code>, כלומר אות רווי. כש-<code>p</code> שווה 0 מחזירים <code>0.0</code> ישירות, כדי שהאלכסון לא יוצג כ-<code>-0.000</code>.`,
+    `<code>list(species)</code> מחזיר את שמות המינים לפי סדר ההכנסה למילון, וכך סדר השורות זהה לסדר העמודות.`,
+    `הלולאה החיצונית עוברת על השורות, ורשימת ההבנה הפנימית מחשבת את המרחק לכל עמודה. הסיבוכיות היא O(k²·L) עבור k מינים ברצפים באורך L.`,
+    `העיצוב <code>{d:&gt;9.3f}</code> מיישר כל מספר לימין ברוחב 9 תווים, עם שלוש ספרות אחרי הנקודה, כך שהטבלה יוצאת מסודרת.`,
+    `קראו את התוצאה: האדם והשימפנזה הכי קרובים, הגורילה מעט רחוקה יותר, והעכבר רחוק מכולם, בדיוק כמו בעץ האמיתי. מטריצה כזו היא הקלט לאלגוריתמים כמו UPGMA ו-Neighbor-Joining.`,
+  ],
+})}
+
+<h2><span class="h-num">7</span>המשימה שלכם</h2>
+<p>ממשו את <code>hamming_distance(seq1, seq2)</code>. הבדיקות הנסתרות בודקות שאתם <strong>זורקים <code>ValueError</code></strong> כשהאורכים שונים.</p>
 `,
 
     problem: {
       statement: `
-<p>Given two DNA strings <code>s</code> and <code>t</code> of equal length, the <strong>Hamming distance</strong> <code>d<sub>H</sub>(s, t)</code> is the number of positions at which their symbols differ.</p>
-<p>Implement <code>hamming_distance(seq1, seq2)</code> so it returns that count as an <code>int</code>.</p>
-<p>If the two sequences have <strong>different lengths</strong>, the distance is undefined: raise a <code>ValueError</code>.</p>`,
+<p>בהינתן שתי מחרוזות DNA ‏<code>s</code> ו-<code>t</code> באורך שווה, <strong>מרחק המינג</strong> <code>d<sub>H</sub>(s, t)</code> הוא מספר העמדות שבהן הסמלים שלהן שונים.</p>
+<p>ממשו את <code>hamming_distance(seq1, seq2)</code> כך שתחזיר את הספירה הזו כ-<code>int</code>.</p>
+<p>אם לשני הרצפים יש <strong>אורכים שונים</strong>, המרחק אינו מוגדר: זרקו <code>ValueError</code>.</p>`,
       examples: [
         {
           input: 'seq1 = "GAGCCTACTAACGGGAT"\nseq2 = "CATCGTAATGACGGCCT"',
           output: "7",
-          explanation: "Mismatches at indices 0, 2, 4, 7, 9, 14, 15.",
+          explanation: "אי-התאמות באינדקסים 0, 2, 4, 7, 9, 14, 15.",
         },
         { input: 'seq1 = "AAAA", seq2 = "AAAA"', output: "0" },
-        { input: 'seq1 = "ACGT", seq2 = "ACG"', output: "ValueError", explanation: "Lengths 4 and 3 differ." },
+        { input: 'seq1 = "ACGT", seq2 = "ACG"', output: "ValueError", explanation: "האורכים 4 ו-3 שונים." },
       ],
       constraints: [
         "<code>0 ≤ len(seq1), len(seq2) ≤ 10<sup>5</sup></code>",
-        "Return an <code>int</code>",
-        "Raise <code>ValueError</code> if <code>len(seq1) != len(seq2)</code>",
+        "יש להחזיר <code>int</code>",
+        "יש לזרוק <code>ValueError</code> אם <code>len(seq1) != len(seq2)</code>",
       ],
       hints: [
-        "Compare lengths first and <code>raise ValueError(\"...\")</code> if they differ.",
-        "<code>zip(seq1, seq2)</code> yields pairs of aligned characters.",
-        "In Python, <code>True + True == 2</code>, so <code>sum()</code> over booleans counts them.",
+        "השוו קודם את האורכים, וזרקו <code>raise ValueError(\"...\")</code> אם הם שונים.",
+        "<code>zip(seq1, seq2)</code> מחזיר זוגות של תווים מיושרים.",
+        "ב-Python ‏<code>True + True == 2</code>, ולכן <code>sum()</code> על ערכים בוליאניים סופר אותם.",
       ],
     },
 
@@ -582,51 +859,52 @@ diffs = [i for i, (a, b) in enumerate(zip(s, t)) if a != b]
   const m4 = {
     id: "m4",
     number: 4,
-    title: "Motif Finding",
-    short: "Motif Finding",
-    difficulty: "Medium",
+    title: "חיפוש מוטיבים",
+    short: "חיפוש מוטיבים",
+    level: "medium",
+    difficulty: "בינוני",
     minutes: 40,
-    topics: ["TF binding sites", "Sliding window", "String search"],
+    topics: ["אתרי קישור", "חלון נע", "חיפוש במחרוזות"],
     fnName: "find_motif",
 
     lesson: `
-<p class="eyebrow">Module 4 · Biology × Computer Science</p>
-<h1>Motif Finding</h1>
-<p class="lede">Hidden in the genome are short "words" (6 to 20 letters) that proteins recognise and bind. Finding every occurrence of such a word is the first step in mapping how genes are switched on and off, and it is a classic problem in computer science.</p>
+<p class="eyebrow">מודול 4 · ביולוגיה × מדעי המחשב</p>
+<h1>חיפוש מוטיבים</h1>
+<p class="lede">בתוך הגנום מסתתרות "מילים" קצרות, באורך 6 עד 20 אותיות, שחלבונים מזהים ונקשרים אליהן. מציאת כל המופעים של מילה כזו היא הצעד הראשון במיפוי האופן שבו גנים מופעלים ומכובים, והיא גם בעיה קלאסית במדעי המחשב.</p>
 
 <div class="objectives">
-  <div class="objectives-title">You will learn</div>
+  <div class="objectives-title">מה תלמדו</div>
   <ul>
-    <li>What transcription factors are and how they find their binding sites</li>
-    <li>Consensus sequences, degeneracy and position weight matrices</li>
-    <li>The sliding-window algorithm and its O(n·m) cost</li>
-    <li>Why built-in tools miss <em>overlapping</em> matches, and faster algorithms (KMP, Boyer–Moore)</li>
+    <li>מהם גורמי שעתוק ואיך הם מוצאים את אתרי הקישור שלהם</li>
+    <li>רצפי קונצנזוס, ניוון (degeneracy) ומטריצות משקל-עמדה</li>
+    <li>אלגוריתם החלון הנע והמחיר שלו, O(n·m)</li>
+    <li>למה כלים מובנים מפספסים התאמות <em>חופפות</em>, ואילו אלגוריתמים מהירים יותר קיימים (KMP, ‏Boyer–Moore)</li>
   </ul>
 </div>
 
-<h2><span class="h-num">1</span>Transcription factors and binding sites</h2>
-<p>Almost every cell in your body has the same genome, yet a neuron and a liver cell make very different proteins. One major reason is <strong>transcription factors (TFs)</strong>. These proteins bind to short DNA sequences near genes, called <strong>transcription factor binding sites (TFBS)</strong>, and help recruit RNA polymerase or block it.</p>
-<p>A recurring short pattern with a biological function is called a <strong>motif</strong>. Some famous ones:</p>
+<h2><span class="h-num">1</span>גורמי שעתוק ואתרי קישור</h2>
+<p>כמעט לכל תא בגופכם יש אותו גנום, ובכל זאת תא עצב ותא כבד מייצרים חלבונים שונים מאוד. אחת הסיבות העיקריות לכך היא <strong>גורמי שעתוק</strong> (transcription factors, ‏TFs). החלבונים האלה נקשרים לרצפי DNA קצרים ליד גנים, שנקראים <strong>אתרי קישור לגורמי שעתוק</strong> (TFBS), ועוזרים לגייס את RNA פולימראז או לחסום אותו.</p>
+<p>דפוס קצר וחוזר בעל תפקיד ביולוגי נקרא <strong>מוטיב</strong>. כמה מוטיבים מפורסמים:</p>
 <table class="table">
-  <thead><tr><th>Motif</th><th>Consensus</th><th>Role</th></tr></thead>
+  <thead><tr><th>מוטיב</th><th>קונצנזוס</th><th>תפקיד</th></tr></thead>
   <tbody>
-    <tr><td>TATA box</td><td>${nt("TATAAA")}</td><td>Core promoter element ~25–35 bp upstream of many eukaryotic genes; bound by TATA-binding protein (TBP).</td></tr>
-    <tr><td>E-box</td><td>${nt("CACGTG")}</td><td>Bound by bHLH factors such as MYC and CLOCK. Controls proliferation and circadian rhythm.</td></tr>
-    <tr><td>EcoRI site</td><td>${nt("GAATTC")}</td><td>Cut by the restriction enzyme EcoRI. It is a <em>palindrome</em>: it reads the same as its reverse complement.</td></tr>
-    <tr><td>Shine–Dalgarno</td><td>${nt("AGGAGG")}</td><td>Bacterial ribosome binding site just upstream of the start codon.</td></tr>
+    <tr><td>TATA box</td><td>${nt("TATAAA")}</td><td>רכיב בפרומוטור הליבה, כ-25–35 bp במעלה הזרם של גנים איקריוטיים רבים. נקשר על ידי TATA-binding protein ‏(TBP).</td></tr>
+    <tr><td>E-box</td><td>${nt("CACGTG")}</td><td>נקשר על ידי גורמי bHLH כמו MYC ו-CLOCK. שולט בשגשוג תאים ובשעון הצירקדי.</td></tr>
+    <tr><td>אתר EcoRI</td><td>${nt("GAATTC")}</td><td>נחתך על ידי אנזים ההגבלה EcoRI. זהו <em>פלינדרום</em>: הוא זהה להשלמה ההפוכה של עצמו.</td></tr>
+    <tr><td>Shine–Dalgarno</td><td>${nt("AGGAGG")}</td><td>אתר קישור הריבוזום בחיידקים, ממש לפני קודון ההתחלה.</td></tr>
   </tbody>
 </table>
 
 <div class="callout callout-bio">
-  <div class="callout-title">Motifs are fuzzy</div>
-  <p>Real binding sites tolerate variation, so a TF may bind <code>TATAAA</code>, <code>TATATA</code> and <code>TATAAT</code>. Biologists capture this with <strong>IUPAC codes</strong> (<code>W</code> = A or T, so <code>TATAWA</code>) or a <strong>position weight matrix (PWM)</strong> that scores each base at each position. Tools like MEME and HOMER <em>discover</em> motifs; tools like FIMO <em>scan</em> genomes for them. Each of these builds on the exact-match search you are about to write.</p>
+  <div class="callout-title">מוטיבים הם מטושטשים</div>
+  <p>אתרי קישור אמיתיים סובלים שונות, כך שגורם שעתוק עשוי להיקשר ל-<code>TATAAA</code>, ל-<code>TATATA</code> וגם ל-<code>TATAAT</code>. ביולוגים מתארים זאת בעזרת <strong>קודי IUPAC</strong> (<code>W</code> = ‏A או T, כלומר <code>TATAWA</code>) או בעזרת <strong>מטריצת משקל-עמדה (PWM)</strong>, שנותנת ציון לכל בסיס בכל עמדה. כלים כמו MEME ו-HOMER <em>מגלים</em> מוטיבים; כלים כמו FIMO <em>סורקים</em> גנומים בחיפוש אחריהם. כולם נשענים על החיפוש המדויק שאתם עומדים לכתוב.</p>
 </div>
 
-<h3>Why overlapping occurrences matter</h3>
-<p>Repetitive DNA such as <code>ATATATAT</code> contains <code>ATAT</code> at positions 0, 2 and 4. These matches <em>overlap</em>, and each one is a separate place where a protein could land. A correct motif finder must report all of them.</p>
+<h3>למה מופעים חופפים חשובים</h3>
+<p>DNA חזרתי כמו <code>ATATATAT</code> מכיל את <code>ATAT</code> בעמדות 0, 2 ו-4. ההתאמות האלה <em>חופפות</em>, וכל אחת מהן היא מקום נפרד שבו חלבון יכול להיקשר. כלי טוב לחיפוש מוטיבים חייב לדווח על כולן.</p>
 
-<h2><span class="h-num">2</span>The sliding-window algorithm</h2>
-<p>Place a window the size of the motif (<em>m</em>) at the start of the DNA (length <em>n</em>). Compare the window with the motif character by character, then slide the window one position to the right. Stop when the window would run off the end, which gives <strong>n − m + 1</strong> windows in total.</p>
+<h2><span class="h-num">2</span>אלגוריתם החלון הנע</h2>
+<p>מציבים חלון בגודל המוטיב (<em>m</em>) בתחילת ה-DNA (שאורכו <em>n</em>). משווים את החלון למוטיב תו אחר תו, ואז מזיזים את החלון עמדה אחת קדימה. עוצרים כשהחלון היה גולש מעבר לסוף, כך שבסך הכול יש <strong>n − m + 1</strong> חלונות.</p>
 ${py(`
 def naive_search(text, pattern):
     n, m = len(text), len(pattern)
@@ -640,11 +918,11 @@ def naive_search(text, pattern):
     return hits
 `)}
 
-<h2><span class="h-num">3</span>Visual Lab: the sliding window</h2>
-<p>Watch every comparison. Green means the characters match; red means a mismatch, after which the window jumps ahead. The counters show how much work the naive algorithm does. Try a repetitive sequence and motif such as <code>AAAAAAAA</code> / <code>AAAB</code> to trigger the worst case.</p>
+<h2><span class="h-num">3</span>מעבדה חזותית: החלון הנע</h2>
+<p>צפו בכל השוואה. ירוק פירושו שהתווים תואמים; אדום פירושו אי-התאמה, שאחריה החלון קופץ קדימה. המונים מראים כמה עבודה האלגוריתם הנאיבי עושה. נסו רצף ומוטיב חזרתיים כמו <code>AAAAAAAA</code> ו-<code>AAAT</code> כדי לראות את המקרה הגרוע.</p>
 <div data-viz="motif"></div>
 
-<h2><span class="h-num">4</span>Doing it in Python</h2>
+<h2><span class="h-num">4</span>מימוש ב-Python</h2>
 ${py(`
 dna, motif = "GATATATGCATATACTT", "ATAT"
 m = len(motif)
@@ -661,7 +939,7 @@ while i != -1:
 `)}
 
 <div class="callout callout-warn">
-  <div class="callout-title">Built-ins that silently skip overlaps</div>
+  <div class="callout-title">כלים מובנים שמדלגים בשקט על חפיפות</div>
   ${py(`
 "ATATAT".count("ATA")                  # 1  - non-overlapping!
 import re
@@ -670,56 +948,145 @@ import re
 `)}
 </div>
 
-<h3>Complexity and better algorithms</h3>
-<p>The naive search does up to <em>m</em> comparisons for each of the <em>n − m + 1</em> windows, so the worst case is <strong>O(n·m)</strong>. For a 20-mer against a 3-billion-base genome that is fine in C, but slow in pure Python. Classic faster algorithms:</p>
+<h3>סיבוכיות ואלגוריתמים טובים יותר</h3>
+<p>החיפוש הנאיבי מבצע עד <em>m</em> השוואות לכל אחד מ-<em>n − m + 1</em> החלונות, ולכן המקרה הגרוע הוא <strong>O(n·m)</strong>. עבור מוטיב באורך 20 מול גנום של 3 מיליארד בסיסים זה בסדר ב-C, אבל איטי ב-Python טהור. אלגוריתמים קלאסיים מהירים יותר:</p>
 <table class="table">
-  <thead><tr><th>Algorithm</th><th>Idea</th><th>Time</th></tr></thead>
+  <thead><tr><th>אלגוריתם</th><th>רעיון</th><th>זמן</th></tr></thead>
   <tbody>
-    <tr><td>Naive / sliding window</td><td>Try every alignment</td><td>O(n·m)</td></tr>
-    <tr><td>Knuth–Morris–Pratt</td><td>Precompute a failure table so you never re-read a text character</td><td>O(n + m)</td></tr>
-    <tr><td>Boyer–Moore</td><td>Compare right-to-left and skip ahead using bad-character / good-suffix rules</td><td>sublinear on average</td></tr>
-    <tr><td>Rabin–Karp</td><td>Rolling hash of each window; only verify on a hash hit</td><td>O(n + m) expected</td></tr>
-    <tr><td>Suffix array / FM-index</td><td>Index the genome once, then answer every query fast (this is how BWA and Bowtie map reads)</td><td>O(m) per query</td></tr>
+    <tr><td>נאיבי / חלון נע</td><td>לנסות כל יישור אפשרי</td><td dir="ltr">O(n·m)</td></tr>
+    <tr><td>Knuth–Morris–Pratt</td><td>לחשב מראש טבלת כישלון, כך שאף תו בטקסט לא נקרא פעמיים</td><td dir="ltr">O(n + m)</td></tr>
+    <tr><td>Boyer–Moore</td><td>להשוות מהסוף להתחלה ולדלג קדימה בעזרת כללי "התו הרע" ו"הסיפא הטובה"</td><td>תת-לינארי בממוצע</td></tr>
+    <tr><td>Rabin–Karp</td><td>גיבוב מתגלגל (rolling hash) לכל חלון; מאמתים רק כשיש התאמת גיבוב</td><td>O(n + m) בתוחלת</td></tr>
+    <tr><td>Suffix array / FM-index</td><td>בונים אינדקס לגנום פעם אחת, ואז עונים מהר על כל שאילתה (כך BWA ו-Bowtie ממפים קריאות)</td><td>O(m) לשאילתה</td></tr>
   </tbody>
 </table>
 
 <div class="complexity">
-  <div><span class="cx-label">Time</span><span class="cx-val">O(n·m)</span><span class="cx-note">naive worst case; ≈ O(n) on typical DNA</span></div>
-  <div><span class="cx-label">Space</span><span class="cx-val">O(k)</span><span class="cx-note">k = number of matches returned</span></div>
+  <div><span class="cx-label">זמן</span><span class="cx-val" dir="ltr">O(n·m)</span><span class="cx-note">המקרה הגרוע של האלגוריתם הנאיבי; בערך O(n) על DNA טיפוסי</span></div>
+  <div><span class="cx-label">זיכרון</span><span class="cx-val" dir="ltr">O(k)</span><span class="cx-note">k הוא מספר ההתאמות המוחזרות</span></div>
 </div>
 
 <div class="callout callout-tip">
-  <div class="callout-title">0-based vs 1-based coordinates</div>
-  <p>Python indexes from 0. Many biological formats count from 1 (GFF, VCF, SAM, and Rosalind answers). BED files are 0-based and half-open, like Python slices. Off-by-one coordinate bugs are probably the most common bug in genomics, so always check which convention a file uses. In this module, return <strong>0-based</strong> indices.</p>
+  <div class="callout-title">קואורדינטות מבוססות 0 לעומת מבוססות 1</div>
+  <p>Python מתחילה לספור מ-0. פורמטים ביולוגיים רבים סופרים מ-1 (GFF, ‏VCF, ‏SAM, וגם התשובות ב-Rosalind). קובצי BED מבוססי 0 וחצי-פתוחים, כמו חיתוכים ב-Python. באגים של "אחד יותר מדי" בקואורדינטות הם כנראה הבאג הנפוץ ביותר בגנומיקה, ולכן תמיד בדקו באיזו מוסכמה קובץ משתמש. במודול הזה, החזירו אינדקסים <strong>מבוססי 0</strong>.</p>
 </div>
 
-<h2><span class="h-num">5</span>Your task</h2>
-<p>Implement <code>find_motif(dna, motif)</code> so it returns <strong>every</strong> starting index, overlaps included. Hidden tests cover empty motifs, motifs longer than the DNA, and a 1,000-base worst case.</p>
+<h2><span class="h-num">5</span>דוגמאות קוד</h2>
+${examplesIntro}
+
+${demo({
+  title: "חיפוש אתרי הגבלה בפלסמיד",
+  intro: "לפני שמשבטים גן לתוך פלסמיד, בודקים היכן אנזימי הגבלה יחתכו אותו. הדוגמה מוצאת את כל אתרי החיתוך של שלושה אנזימים נפוצים, ובודקת שהאתרים פלינדרומיים.",
+  code: `
+def reverse_complement(seq):
+    return seq.translate(str.maketrans("ACGT", "TGCA"))[::-1]
+
+def is_palindrome(site):
+    return site == reverse_complement(site)
+
+ENZYMES = {"EcoRI": "GAATTC", "BamHI": "GGATCC", "HindIII": "AAGCTT"}
+plasmid = "TTGAATTCGGATCCAAGCTTGCGAATTCAT"
+
+for enzyme, site in ENZYMES.items():
+    hits = []
+    start = plasmid.find(site)
+    while start != -1:
+        hits.append(start)
+        start = plasmid.find(site, start + 1)
+    print(f"{enzyme:<8} {site}  palindrome={is_palindrome(site)}  positions={hits}")
+`,
+  steps: [
+    `<code>reverse_complement</code> משתמשת בטבלת התרגום ממודול 1 ואז הופכת את סדר התווים.`,
+    `<code>is_palindrome</code> בודקת אם אתר זהה להשלמה ההפוכה של עצמו. רוב אנזימי ההגבלה מסוג II מזהים אתרים פלינדרומיים, ולכן מספיק לחפש בגדיל אחד: ההתאמה בגדיל השני נמצאת בדיוק באותה עמדה.`,
+    `<code>plasmid.find(site)</code> מחזיר את האינדקס של המופע הראשון, או <code>-1</code> אם אין כזה.`,
+    `בלולאת ה-<code>while</code> ממשיכים לחפש מ-<code>start + 1</code>, ולא מ-<code>start + len(site)</code>, כדי לא לפספס מופעים חופפים.`,
+    `<code>str.find</code> ממומש ב-C, ולכן הקפיצה בין התאמות מהירה הרבה יותר מבדיקה של כל חלון בלולאת Python.`,
+  ],
+})}
+
+${demo({
+  title: "מוטיבים מנוונים עם קודי IUPAC וביטויים רגולריים",
+  intro: "גורמי שעתוק נקשרים למשפחה של רצפים דומים, ולא לרצף מדויק אחד. קודי IUPAC מאפשרים לתאר מוטיב מנוון, ו<em>ביטוי רגולרי</em> מאפשר לחפש אותו.",
+  code: `
+import re
+
+IUPAC = {
+    "A": "A", "C": "C", "G": "G", "T": "T",
+    "W": "[AT]", "S": "[CG]", "R": "[AG]", "Y": "[CT]", "N": "[ACGT]",
+}
+
+def motif_to_regex(motif):
+    return "".join(IUPAC[ch] for ch in motif)
+
+promoter = "GCTATAAAAGGCTATATAAAGCCTATAAATG"
+motif = "TATAWA"
+pattern = motif_to_regex(motif)
+print("regex:", pattern)
+
+for m in re.finditer(f"(?=({pattern}))", promoter):
+    print(f"index {m.start():>2}: {m.group(1)}")
+`,
+  steps: [
+    `המילון <code>IUPAC</code> ממפה כל קוד למחלקת תווים של ביטוי רגולרי: <code>W</code> (מלשון weak, קשר חלש) הופך ל-<code>[AT]</code>, ו-<code>N</code> לכל אחד מארבעת הבסיסים.`,
+    `<code>motif_to_regex("TATAWA")</code> מחליפה כל תו במוטיב ומחברת את התוצאות, כך שמתקבל הביטוי <code>TATA[AT]A</code>.`,
+    `המבנה <code>(?=(...))</code> הוא <em>lookahead</em>: הוא בודק התאמה בלי "לצרוך" תווים, ולכן מנוע הביטויים מתקדם תו אחד בכל פעם ומוצא גם מופעים חופפים.`,
+    `הקבוצה הפנימית <code>(...)</code> לוכדת את הרצף שהתאים בפועל, ו-<code>m.group(1)</code> מחזיר אותו. <code>m.start()</code> נותן את אינדקס ההתחלה.`,
+    `שימו לב לפלט: מופיעים בו גם <code>TATAAA</code> וגם <code>TATATA</code>, שני רצפים שונים שמתאימים לאותו מוטיב מנוון. ההתאמות בעמדות 12 ו-14 חופפות, ושתיהן נמצאו.`,
+  ],
+})}
+
+${demo({
+  title: "המילים השכיחות ביותר (k-mers)",
+  intro: "כשלא יודעים מראש מהו המוטיב, מתחילים בספירת כל המילים באורך k ‏(k-mers) ומחפשים את אלה שחוזרות באופן חשוד. זהו הרעיון שמאחורי כלים לגילוי מוטיבים.",
+  code: `
+from collections import Counter
+
+def kmer_counts(seq, k):
+    return Counter(seq[i:i + k] for i in range(len(seq) - k + 1))
+
+dna = "ACGTTGCATGTCGCATGATGCATGAGAGCT"
+counts = kmer_counts(dna, 4)
+
+print("distinct 4-mers:", len(counts))
+for kmer, n in counts.most_common(3):
+    print(kmer, n)
+`,
+  steps: [
+    `<code>range(len(seq) - k + 1)</code> מייצר את כל עמדות ההתחלה האפשריות, אותו מספר חלונות כמו באלגוריתם החלון הנע.`,
+    `<code>seq[i:i + k]</code> חותך כל חלון, והגנרטור מעביר את החלונות ישר אל <code>Counter</code>, בלי לבנות רשימת ביניים.`,
+    `<code>len(counts)</code> הוא מספר ה-k-mers <em>השונים</em> שנמצאו, ו-<code>counts.most_common(3)</code> מחזיר את שלושת השכיחים ביותר כזוגות <code>(kmer, count)</code>, ממוינים מהשכיח ביותר.`,
+    `הסיבוכיות היא O(n·k): יש n חלונות, ובכל אחד מתבצעים חיתוך וגיבוב של מחרוזת באורך k.`,
+    `באזור ה-ori של חיידקים, k-mers שחוזרים פעמים רבות בחלון קצר הם לרוב אתרי קישור של החלבון DnaA, שמתחיל את השכפול.`,
+  ],
+})}
+
+<h2><span class="h-num">6</span>המשימה שלכם</h2>
+<p>ממשו את <code>find_motif(dna, motif)</code> כך שתחזיר <strong>כל</strong> אינדקס התחלה, כולל חפיפות. הבדיקות הנסתרות מכסות מוטיב ריק, מוטיב ארוך מה-DNA ומקרה גרוע באורך 1,000 בסיסים.</p>
 `,
 
     problem: {
       statement: `
-<p>Given a DNA string <code>dna</code> and a shorter string <code>motif</code>, find <strong>all</strong> locations where <code>motif</code> occurs as a substring of <code>dna</code>.</p>
-<p>Implement <code>find_motif(dna, motif)</code> so it returns a <code>list</code> of the <strong>0-based</strong> starting indices in increasing order. <strong>Overlapping</strong> occurrences must all be reported.</p>
+<p>בהינתן מחרוזת DNA ‏<code>dna</code> ומחרוזת קצרה יותר <code>motif</code>, מצאו את <strong>כל</strong> המיקומים שבהם <code>motif</code> מופיעה כתת-מחרוזת של <code>dna</code>.</p>
+<p>ממשו את <code>find_motif(dna, motif)</code> כך שתחזיר <code>list</code> של אינדקסי ההתחלה, <strong>מבוססי 0</strong>, בסדר עולה. יש לדווח על כל המופעים, כולל מופעים <strong>חופפים</strong>.</p>
 <ul class="tight">
-  <li>If <code>motif</code> does not occur, or is longer than <code>dna</code>, return <code>[]</code>.</li>
-  <li>If <code>motif</code> is the empty string, return <code>[]</code>.</li>
+  <li>אם <code>motif</code> לא מופיעה, או ארוכה מ-<code>dna</code>, החזירו <code>[]</code>.</li>
+  <li>אם <code>motif</code> היא מחרוזת ריקה, החזירו <code>[]</code>.</li>
 </ul>`,
       examples: [
-        { input: 'dna = "GATATATGCATATACTT"\nmotif = "ATAT"', output: "[1, 3, 9]", explanation: "Occurrences at 1 and 3 overlap (ATATAT); both count." },
+        { input: 'dna = "GATATATGCATATACTT"\nmotif = "ATAT"', output: "[1, 3, 9]", explanation: "המופעים בעמדות 1 ו-3 חופפים (ATATAT), ושניהם נספרים." },
         { input: 'dna = "AAAA", motif = "AA"', output: "[0, 1, 2]" },
         { input: 'dna = "ACGT", motif = "TTT"', output: "[]" },
       ],
       constraints: [
         "<code>0 ≤ len(motif)</code>, <code>0 ≤ len(dna) ≤ 10<sup>4</sup></code>",
-        "Return a <code>list</code> of <code>int</code> in ascending order",
-        "Indices are 0-based (Rosalind's SUBS problem uses 1-based, so add 1 there)",
+        "יש להחזיר <code>list</code> של <code>int</code> בסדר עולה",
+        "האינדקסים מבוססי 0 (בבעיית SUBS של Rosalind הם מבוססי 1, ולכן שם מוסיפים 1)",
       ],
       hints: [
-        "There are <code>len(dna) - len(motif) + 1</code> candidate windows.",
-        "<code>dna[i:i + m] == motif</code> checks one window.",
-        "Handle the empty motif before the main loop.",
-        "Do <em>not</em> use <code>str.count</code> or plain <code>re.finditer</code>: they skip overlaps.",
+        "יש <code>len(dna) - len(motif) + 1</code> חלונות אפשריים.",
+        "<code>dna[i:i + m] == motif</code> בודק חלון אחד.",
+        "טפלו במוטיב ריק לפני הלולאה הראשית.",
+        "<em>אל</em> תשתמשו ב-<code>str.count</code> או ב-<code>re.finditer</code> רגיל: הם מדלגים על חפיפות.",
       ],
     },
 

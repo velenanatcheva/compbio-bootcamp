@@ -4,6 +4,8 @@ An interactive computational biology course that runs entirely in the browser. E
 
 No backend and no build step: it's static HTML, CSS and JS, ready for GitHub Pages.
 
+**Language:** the course is in **Hebrew** with a right-to-left (RTL) layout. Python code, the code editor, the test console, inline code and DNA sequence tracks stay left-to-right, and scientific terms (DNA, RNA, FASTA, Pyodide…) stay in English.
+
 ## Run locally
 
 The Python runtime lives in a Web Worker, and browsers block workers on `file://`. Serve the folder over HTTP instead:
@@ -32,6 +34,8 @@ All paths are relative, so it also works from a project subpath.
 | 2 | Sequence Analysis & GC Content | Composition stats + temperature-driven DNA melting | `gc_content(dna)` |
 | 3 | Mutations & Hamming Distance | Strand comparison, transitions/transversions, Jukes–Cantor | `hamming_distance(seq1, seq2)` |
 | 4 | Motif Finding | Step-through sliding-window search with comparison counter | `find_motif(dna, motif)` |
+
+Each module also has a **Code Examples** (דוגמאות קוד) section right before the coding task: ready-made Python programs you can run in the browser, each with a step-by-step Hebrew walkthrough.
 
 **Run** checks the visible examples. **Submit** also runs the hidden edge-case tests and marks the module complete.
 

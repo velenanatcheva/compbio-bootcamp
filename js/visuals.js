@@ -2,6 +2,8 @@
    Visuals — DOM-based interactive labs mounted into lesson placeholders.
    Each factory takes a mount element and returns { destroy() } so the app
    can clean up timers when the learner switches modules.
+   UI text is Hebrew (RTL); sequence tracks, inputs and sliders are pinned
+   to LTR because DNA is read 5′→3′ left-to-right.
    ========================================================================== */
 (function () {
   const CBB = (window.CBB = window.CBB || {});
@@ -14,6 +16,7 @@
   const cleanDNA = (s) => s.toUpperCase().replace(/[^ACGT]/g, "");
   const toRNA = (b) => (b === "T" ? "U" : b);
   const tile = (b, cls = "") => `<span class="nt nt-${b.toLowerCase()} ${cls}">${b}</span>`;
+  const ltr = (html) => `<span dir="ltr" class="ltr-inline">${html}</span>`;
   const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
   function timers() {
@@ -45,7 +48,7 @@
     return `
       <div class="viz">
         <div class="viz-head">
-          <div class="viz-title"><span class="viz-dot"></span>Visual Lab<span class="viz-sep">·</span>${title}</div>
+          <div class="viz-title"><span class="viz-dot"></span>מעבדה חזותית<span class="viz-sep">·</span>${title}</div>
           <div class="viz-sub">${subtitle}</div>
         </div>
         ${body}
@@ -53,7 +56,7 @@
   }
 
   const speedSelect = `
-    <select class="select select-sm" data-ref="speed" aria-label="Animation speed">
+    <select class="select select-sm" data-ref="speed" aria-label="מהירות האנימציה" dir="ltr">
       <option value="480">0.5×</option>
       <option value="240" selected>1×</option>
       <option value="110">2×</option>
@@ -74,26 +77,26 @@
     const T = timers();
     const BUBBLE = 5;
     root.innerHTML = shell(
-      "Transcription",
-      "RNA polymerase opens a transcription bubble, reads the template strand 3′→5′ and synthesises mRNA 5′→3′.",
+      "שעתוק",
+      "RNA פולימראז פותח בועת שעתוק, קורא את גדיל התבנית מ-3′ ל-5′ ומסנתז mRNA מ-5′ ל-3′.",
       `
       <div class="viz-controls">
         <label class="field grow">
-          <span class="field-label">Coding strand (5′→3′)</span>
-          <input class="input mono" data-ref="seq" value="ATGGCCATTGTAATGGGCCGCTGAAAGGGTGCCCGATAG" maxlength="60" spellcheck="false" autocomplete="off">
+          <span class="field-label">גדיל מקודד (<span dir="ltr">5′→3′</span>)</span>
+          <input class="input mono" dir="ltr" data-ref="seq" value="ATGGCCATTGTAATGGGCCGCTGAAAGGGTGCCCGATAG" maxlength="60" spellcheck="false" autocomplete="off">
         </label>
         <div class="btn-row">
-          <button class="btn btn-primary btn-sm" data-ref="play">▶ Transcribe</button>
-          <button class="btn btn-sm" data-ref="step">Step</button>
-          <button class="btn btn-ghost btn-sm" data-ref="reset">Reset</button>
+          <button class="btn btn-primary btn-sm" data-ref="play">▶ שעתוק</button>
+          <button class="btn btn-sm" data-ref="step">צעד</button>
+          <button class="btn btn-ghost btn-sm" data-ref="reset">איפוס</button>
           ${speedSelect}
         </div>
       </div>
-      <div class="viz-stage-wrap">
+      <div class="viz-stage-wrap" dir="ltr">
         <div class="lane-labels">
-          <span style="height:26px">5′ coding 3′</span>
+          <span style="height:26px"><span>5′ <bdi>מקודד</bdi> 3′</span></span>
           <span style="height:16px"></span>
-          <span style="height:26px">3′ template 5′</span>
+          <span style="height:26px"><span>3′ <bdi>תבנית</bdi> 5′</span></span>
           <span style="height:22px"></span>
           <span style="height:26px" class="lbl-rna">5′ mRNA 3′</span>
         </div>
@@ -101,7 +104,7 @@
       </div>
       <div class="viz-readout" data-ref="readout"></div>
       <div class="legend">
-        ${tile("A")}<span>Adenine</span>${tile("T")}<span>Thymine</span>${tile("G")}<span>Guanine</span>${tile("C")}<span>Cytosine</span>${tile("U")}<span>Uracil (RNA)</span>
+        ${tile("A")}<span>אדנין</span>${tile("T")}<span>תימין</span>${tile("G")}<span>גואנין</span>${tile("C")}<span>ציטוזין</span>${tile("U")}<span>אורציל (RNA)</span>
       </div>`
     );
     const $ = refs(root);
@@ -121,7 +124,7 @@
       if (!seq) {
         $("track").innerHTML = "";
         cols = [];
-        setReadout(`<span class="ro-warn">Enter at least one base (A, C, G, T).</span>`);
+        setReadout(`<span class="ro-warn">הזינו לפחות בסיס אחד (A, ‏C, ‏G, ‏T).</span>`);
         return;
       }
       $("track").innerHTML =
@@ -140,7 +143,7 @@
       cols = [...$("track").querySelectorAll(".tx-col")];
       $("stage").scrollLeft = 0;
       setReadout(
-        `Ready: <b>${seq.length}</b> bp double helix. Press <b>Transcribe</b> or <b>Step</b>. The template strand is the reverse complement of what you typed.`
+        `מוכן: סליל כפול באורך <b>${seq.length}</b> bp. לחצו <b>שעתוק</b> או <b>צעד</b>. גדיל התבנית הוא ההשלמה של מה שהקלדתם.`
       );
     }
 
@@ -158,8 +161,8 @@
       const b = seq[i];
       const mrna = seq.slice(0, i + 1).split("").map(toRNA).join("");
       setReadout(
-        `<b>Position ${i + 1}/${seq.length}</b> · template ${tile(COMP[b], "nt-xs")} pairs with incoming ${tile(toRNA(b), "nt-xs")}` +
-          `<div class="ro-seq">mRNA 5′-<span class="mono">${mrna.length > 36 ? "…" + mrna.slice(-36) : mrna}</span>-3′</div>`
+        `<b>עמדה ${i + 1}/${seq.length}</b> · בסיס התבנית ${tile(COMP[b], "nt-xs")} מזדווג עם ${tile(toRNA(b), "nt-xs")} הנכנס` +
+          `<div class="ro-seq">mRNA: ${ltr(`5′-<span class="mono">${mrna.length > 36 ? "…" + mrna.slice(-36) : mrna}</span>-3′`)}</div>`
       );
       if (i === seq.length - 1) finish();
       return true;
@@ -173,11 +176,11 @@
       const mrna = seq.split("").map(toRNA).join("");
       const codons = mrna.match(/.{1,3}/g).join(" ");
       const start = mrna.startsWith("AUG")
-        ? `<span class="ro-good">Starts with AUG, the start codon (Met), so a ribosome could begin translating here.</span>`
-        : `<span class="ro-dim">No AUG start codon at position 1.</span>`;
+        ? `<span class="ro-good">הרצף מתחיל ב-AUG, קודון ההתחלה (Met), ולכן ריבוזום יכול להתחיל לתרגם מכאן.</span>`
+        : `<span class="ro-dim">אין קודון התחלה AUG בעמדה 1.</span>`;
       setReadout(
-        `<b>Transcription complete.</b> The helix re-zips; the mRNA leaves for the ribosome.` +
-          `<div class="ro-seq">codons: <span class="mono">${codons}</span></div>${start}`
+        `<b>השעתוק הושלם.</b> הסליל נסגר מחדש, וה-mRNA יוצא לדרכו אל הריבוזום.` +
+          `<div class="ro-seq">קודונים: ${ltr(`<span class="mono">${codons}</span>`)}</div>${start}`
       );
       pause();
     }
@@ -190,13 +193,13 @@
       if (playing) return pause();
       if (i >= seq.length - 1) build();
       playing = true;
-      $("play").textContent = "❚❚ Pause";
+      $("play").textContent = "❚❚ השהיה";
       tick();
     }
     function pause() {
       playing = false;
       T.clear();
-      $("play").textContent = "▶ Transcribe";
+      $("play").textContent = "▶ שעתוק";
     }
 
     $("play").addEventListener("click", play);
@@ -217,37 +220,37 @@
       "CCACCCTCGTGGTATGGCTAGGCATTCAGGAACCGGAGAACGCTTCAGACCAGCCCGGACTGGGAACCTGCGGGCAGTAGGTGGAAT";
     const MAX_DUPLEX = 120;
     root.innerHTML = shell(
-      "GC content & DNA melting",
-      "Composition sets stability. Raise the temperature and watch AT-rich regions melt first.",
+      "תכולת GC והתכת DNA",
+      "ההרכב קובע את היציבות. העלו את הטמפרטורה וצפו באזורים העשירים ב-AT נמסים ראשונים.",
       `
       <div class="viz-controls col">
         <label class="field">
-          <span class="field-label">Sequence</span>
-          <textarea class="input mono" data-ref="seq" rows="2" spellcheck="false">ATATTTATAAATGCGCGGCCGCGGCATATTAAATTTAGCGGCCCGCGGGCATTATAATTA</textarea>
+          <span class="field-label">רצף</span>
+          <textarea class="input mono" dir="ltr" data-ref="seq" rows="2" spellcheck="false">ATATTTATAAATGCGCGGCCGCGGCATATTAAATTTAGCGGCCCGCGGGCATTATAATTA</textarea>
         </label>
         <div class="btn-row wrap">
-          <label class="inline-field">GC bias <input type="range" min="0" max="100" value="50" data-ref="bias"><output data-ref="biasOut">50%</output></label>
-          <label class="inline-field">Length <input type="number" class="input input-num" min="4" max="200" value="60" data-ref="len"></label>
-          <button class="btn btn-sm" data-ref="random">⟳ Random</button>
-          <button class="btn btn-ghost btn-sm" data-ref="sample">Rosalind sample</button>
+          <label class="inline-field">הטיית GC <input type="range" dir="ltr" min="0" max="100" value="50" data-ref="bias"><output data-ref="biasOut" dir="ltr">50%</output></label>
+          <label class="inline-field">אורך <input type="number" dir="ltr" class="input input-num" min="4" max="200" value="60" data-ref="len"></label>
+          <button class="btn btn-sm" data-ref="random">⟳ רצף אקראי</button>
+          <button class="btn btn-ghost btn-sm" data-ref="sample">דוגמה מ-Rosalind</button>
         </div>
       </div>
       <div class="stat-grid">
-        <div class="stat"><div class="stat-k">Length</div><div class="stat-v" data-ref="sLen">–</div></div>
-        <div class="stat stat-accent"><div class="stat-k">GC content</div><div class="stat-v" data-ref="sGC">–</div></div>
-        <div class="stat"><div class="stat-k">Est. T<sub>m</sub></div><div class="stat-v" data-ref="sTm">–</div><div class="stat-n" data-ref="sTmN"></div></div>
-        <div class="stat"><div class="stat-k">H-bonds</div><div class="stat-v" data-ref="sHB">–</div></div>
+        <div class="stat"><div class="stat-k">אורך</div><div class="stat-v" dir="ltr" data-ref="sLen">–</div></div>
+        <div class="stat stat-accent"><div class="stat-k">תכולת GC</div><div class="stat-v" dir="ltr" data-ref="sGC">–</div></div>
+        <div class="stat"><div class="stat-k">T<sub>m</sub> משוערת</div><div class="stat-v" dir="ltr" data-ref="sTm">–</div><div class="stat-n" data-ref="sTmN"></div></div>
+        <div class="stat"><div class="stat-k">קשרי מימן</div><div class="stat-v" dir="ltr" data-ref="sHB">–</div></div>
       </div>
-      <div class="comp-bar" data-ref="comp"></div>
+      <div class="comp-bar" dir="ltr" data-ref="comp"></div>
       <div class="melt-head">
-        <label class="inline-field grow">🌡 Temperature
-          <input type="range" min="30" max="100" value="37" data-ref="temp" class="temp-range">
-          <output data-ref="tempOut" class="temp-out">37 °C</output>
+        <label class="inline-field grow">🌡 טמפרטורה
+          <input type="range" dir="ltr" min="30" max="100" value="37" data-ref="temp" class="temp-range">
+          <output data-ref="tempOut" class="temp-out" dir="ltr">37 °C</output>
         </label>
       </div>
-      <div class="viz-stage" data-ref="stage"><div class="duplex" data-ref="duplex"></div></div>
+      <div class="viz-stage" dir="ltr" data-ref="stage"><div class="duplex" data-ref="duplex"></div></div>
       <div class="viz-readout" data-ref="readout"></div>
-      <p class="viz-foot">Toy model: each pair melts above 45 + 50·f °C, where f is the GC fraction in a 9-bp window (+3 °C if the pair itself is G·C). Real melting is cooperative and depends on salt and nearest-neighbour stacking energies.</p>`
+      <p class="viz-foot">מודל מפושט: כל זוג נמס מעל ‎45 + 50·f °C, כאשר f הוא שיעור ה-GC בחלון של 9 bp (ועוד 3 °C אם הזוג עצמו הוא G·C). התכה אמיתית היא תהליך שיתופי, שתלוי בריכוז המלח ובאנרגיות הערימה של שכנים קרובים.</p>`
     );
     const $ = refs(root);
     let seq = "";
@@ -259,8 +262,8 @@
       const gcN = (s.match(/[GC]/g) || []).length;
       if (!n) return null;
       return n < 14
-        ? { v: 2 * (n - gcN) + 4 * gcN, method: "Wallace rule" }
-        : { v: 64.9 + (41 * (gcN - 16.4)) / n, method: "GC formula" };
+        ? { v: 2 * (n - gcN) + 4 * gcN, method: "כלל Wallace" }
+        : { v: 64.9 + (41 * (gcN - 16.4)) / n, method: "נוסחת GC" };
     }
 
     function build() {
@@ -325,22 +328,22 @@
       });
       const n = cols.length;
       if (!n) {
-        $("readout").innerHTML = `<span class="ro-warn">Enter a DNA sequence to analyse.</span>`;
+        $("readout").innerHTML = `<span class="ro-warn">הזינו רצף DNA לניתוח.</span>`;
         return;
       }
       const frac = melted / n;
       const t = tm(seq);
       const state =
         frac === 0
-          ? `<span class="ro-good">Fully double-stranded.</span>`
+          ? `<span class="ro-good">דו-גדילי לחלוטין.</span>`
           : frac < 0.5
-            ? `<span class="ro-dim">Partially melted: "bubbles" open in AT-rich regions first.</span>`
+            ? `<span class="ro-dim">נמס חלקית: "בועות" נפתחות קודם באזורים העשירים ב-AT.</span>`
             : frac < 1
-              ? `<span class="ro-warn">Mostly single-stranded: past the midpoint of melting.</span>`
-              : `<span class="ro-bad">Fully denatured: two separate single strands.</span>`;
+              ? `<span class="ro-warn">ברובו חד-גדילי: עברנו את נקודת האמצע של ההתכה.</span>`
+              : `<span class="ro-bad">דנטורציה מלאה: שני גדילים בודדים ונפרדים.</span>`;
       $("readout").innerHTML =
-        `<b>${temp} °C</b> · ${melted}/${n} base pairs melted (${(frac * 100).toFixed(0)}%). ${state}` +
-        (t ? `<div class="ro-dim small">Estimated T<sub>m</sub> of the whole duplex: ${t.v.toFixed(1)} °C (${t.method}).${seq.length > MAX_DUPLEX ? ` Showing first ${MAX_DUPLEX} bp.` : ""}</div>` : "");
+        `<b>${ltr(`${temp} °C`)}</b> · ${melted}/${n} זוגות בסיסים נמסו (${(frac * 100).toFixed(0)}%). ${state}` +
+        (t ? `<div class="ro-dim small">טמפרטורת ההתכה המשוערת של הסליל כולו: ${ltr(`${t.v.toFixed(1)} °C`)} (${t.method}).${seq.length > MAX_DUPLEX ? ` מוצגים ${MAX_DUPLEX} ה-bp הראשונים.` : ""}</div>` : "");
     }
 
     function randomSeq() {
@@ -368,38 +371,39 @@
   function hamming(root) {
     const T = timers();
     const DEFAULT = ["GAGCCTACTAACGGGAT", "CATCGTAATGACGGCCT"];
+    const KIND_HE = { ts: "טרנזיציה", tv: "טרנסברזיה" };
     root.innerHTML = shell(
-      "Hamming distance",
-      "Aligned position by position: every mismatch is one point mutation.",
+      "מרחק המינג",
+      "השוואה עמדה אחר עמדה: כל אי-התאמה היא מוטציה נקודתית אחת.",
       `
       <div class="viz-controls col">
         <div class="field-pair">
-          <label class="field"><span class="field-label">Sequence 1</span><input class="input mono" data-ref="s1" value="${DEFAULT[0]}" maxlength="60" spellcheck="false" autocomplete="off"></label>
-          <label class="field"><span class="field-label">Sequence 2</span><input class="input mono" data-ref="s2" value="${DEFAULT[1]}" maxlength="60" spellcheck="false" autocomplete="off"></label>
+          <label class="field"><span class="field-label">רצף 1</span><input class="input mono" dir="ltr" data-ref="s1" value="${DEFAULT[0]}" maxlength="60" spellcheck="false" autocomplete="off"></label>
+          <label class="field"><span class="field-label">רצף 2</span><input class="input mono" dir="ltr" data-ref="s2" value="${DEFAULT[1]}" maxlength="60" spellcheck="false" autocomplete="off"></label>
         </div>
         <div class="btn-row">
-          <button class="btn btn-primary btn-sm" data-ref="scan">▶ Scan</button>
-          <button class="btn btn-sm" data-ref="mutate">⚡ Mutate</button>
-          <button class="btn btn-ghost btn-sm" data-ref="reset">Reset</button>
+          <button class="btn btn-primary btn-sm" data-ref="scan">▶ סריקה</button>
+          <button class="btn btn-sm" data-ref="mutate">⚡ מוטציה</button>
+          <button class="btn btn-ghost btn-sm" data-ref="reset">איפוס</button>
           ${speedSelect}
         </div>
       </div>
-      <div class="viz-stage-wrap">
+      <div class="viz-stage-wrap" dir="ltr">
         <div class="lane-labels">
-          <span style="height:26px">seq 1</span>
+          <span style="height:26px"><bdi>רצף 1</bdi></span>
           <span style="height:22px"></span>
-          <span style="height:26px">seq 2</span>
+          <span style="height:26px"><bdi>רצף 2</bdi></span>
           <span style="height:16px"></span>
         </div>
         <div class="viz-stage" data-ref="stage"><div class="hm-track" data-ref="track"></div></div>
       </div>
       <div class="stat-grid stat-grid-6">
-        <div class="stat stat-accent"><div class="stat-k">d<sub>H</sub></div><div class="stat-v" data-ref="d">–</div></div>
-        <div class="stat"><div class="stat-k">p-distance</div><div class="stat-v" data-ref="p">–</div></div>
-        <div class="stat"><div class="stat-k">Jukes–Cantor</div><div class="stat-v" data-ref="jc">–</div></div>
-        <div class="stat"><div class="stat-k"><span class="dot dot-ts"></span>Transitions</div><div class="stat-v" data-ref="ts">–</div></div>
-        <div class="stat"><div class="stat-k"><span class="dot dot-tv"></span>Transversions</div><div class="stat-v" data-ref="tv">–</div></div>
-        <div class="stat"><div class="stat-k">Ts / Tv</div><div class="stat-v" data-ref="tstv">–</div></div>
+        <div class="stat stat-accent"><div class="stat-k">d<sub>H</sub></div><div class="stat-v" dir="ltr" data-ref="d">–</div></div>
+        <div class="stat"><div class="stat-k">p-distance</div><div class="stat-v" dir="ltr" data-ref="p">–</div></div>
+        <div class="stat"><div class="stat-k">Jukes–Cantor</div><div class="stat-v" dir="ltr" data-ref="jc">–</div></div>
+        <div class="stat"><div class="stat-k"><span class="dot dot-ts"></span>טרנזיציות</div><div class="stat-v" dir="ltr" data-ref="ts">–</div></div>
+        <div class="stat"><div class="stat-k"><span class="dot dot-tv"></span>טרנסברזיות</div><div class="stat-v" dir="ltr" data-ref="tv">–</div></div>
+        <div class="stat"><div class="stat-k">Ts / Tv</div><div class="stat-v" dir="ltr" data-ref="tstv">–</div></div>
       </div>
       <div class="viz-readout" data-ref="readout"></div>`
     );
@@ -440,7 +444,7 @@
       const set = (r, v) => ($(r).textContent = v);
       if (s1.length !== s2.length) {
         ["d", "p", "jc", "ts", "tv", "tstv"].forEach((r) => set(r, "—"));
-        $("readout").innerHTML = `<span class="ro-bad">Lengths differ (${s1.length} vs ${s2.length}).</span> Hamming distance is undefined, so your function should <code>raise ValueError</code> here. Comparing sequences with indels needs a sequence <em>alignment</em> first.`;
+        $("readout").innerHTML = `<span class="ro-bad">האורכים שונים (${s1.length} לעומת ${s2.length}).</span> מרחק המינג אינו מוגדר במקרה הזה, ולכן הפונקציה שלכם צריכה לזרוק <code>ValueError</code>. כדי להשוות רצפים עם אינדלים צריך קודם לבצע <em>יישור</em> רצפים.`;
         return;
       }
       const d = ts + tv;
@@ -448,20 +452,20 @@
       const jc = p < 0.75 ? -0.75 * Math.log(1 - (4 * p) / 3) : Infinity;
       set("d", d);
       set("p", n ? p.toFixed(3) : "–");
-      set("jc", n ? (Number.isFinite(jc) ? jc.toFixed(3) : "∞ (saturated)") : "–");
+      set("jc", n ? (Number.isFinite(jc) ? jc.toFixed(3) : "∞") : "–");
       set("ts", ts);
       set("tv", tv);
       set("tstv", tv ? (ts / tv).toFixed(2) : ts ? "∞" : "–");
       if (flashAt < 0)
         $("readout").innerHTML = n
-          ? `<b>${d}</b> of <b>${n}</b> aligned positions differ. Press <b>Scan</b> to watch the O(n) loop, or <b>Mutate</b> to add a random point mutation to sequence 2.`
-          : `<span class="ro-warn">Enter two sequences.</span>`;
+          ? `<b>${d}</b> מתוך <b>${n}</b> העמדות המיושרות שונות. לחצו <b>סריקה</b> כדי לצפות בלולאת ה-${ltr("O(n)")}, או <b>מוטציה</b> כדי להוסיף מוטציה נקודתית אקראית לרצף 2.`
+          : `<span class="ro-warn">הזינו שני רצפים.</span>`;
     }
 
     function stopScan() {
       scanning = false;
       T.clear();
-      $("scan").textContent = "▶ Scan";
+      $("scan").textContent = "▶ סריקה";
       cols.forEach((c) => c.classList.remove("scan", "seen"));
     }
 
@@ -470,7 +474,7 @@
       if (s1.length !== s2.length || !s1.length) return;
       stopScan();
       scanning = true;
-      $("scan").textContent = "❚❚ Stop";
+      $("scan").textContent = "❚❚ עצירה";
       let k = 0;
       let d = 0;
       const tickScan = () => {
@@ -484,17 +488,17 @@
         if (kd !== "match") d++;
         const verdict =
           kd === "match"
-            ? `<span class="ro-good">match</span>`
-            : `<span class="${kd === "ts" ? "ro-warn" : "ro-bad"}">mismatch (${kd === "ts" ? "transition" : "transversion"})</span>`;
-        $("readout").innerHTML = `<span class="mono">i = ${k}</span> · ${tile(s1[k], "nt-xs")} vs ${tile(s2[k], "nt-xs")} → ${verdict} · <b>distance = ${d}</b>`;
+            ? `<span class="ro-good">התאמה</span>`
+            : `<span class="${kd === "ts" ? "ro-warn" : "ro-bad"}">אי-התאמה (${KIND_HE[kd]})</span>`;
+        $("readout").innerHTML = `${ltr(`<span class="mono">i = ${k}</span> · ${tile(s1[k], "nt-xs")} vs ${tile(s2[k], "nt-xs")}`)} ← ${verdict} · <b>מרחק עד כה = ${d}</b>`;
         k++;
         if (k < s1.length) T.after(+$("speed").value, tickScan);
         else
           T.after(+$("speed").value, () => {
             scanning = false;
-            $("scan").textContent = "▶ Scan";
+            $("scan").textContent = "▶ סריקה";
             cols.forEach((c) => c.classList.remove("scan", "seen"));
-            $("readout").innerHTML = `<b>Done:</b> ${s1.length} comparisons for ${s1.length} positions, one per position, which is why the algorithm is <b>O(n)</b>. Hamming distance = <b>${d}</b>.`;
+            $("readout").innerHTML = `<b>הסריקה הסתיימה:</b> ${s1.length} השוואות עבור ${s1.length} עמדות, השוואה אחת לכל עמדה. לכן האלגוריתם הוא <b>${ltr("O(n)")}</b>. מרחק המינג = <b>${d}</b>.`;
           });
       };
       tickScan();
@@ -510,7 +514,7 @@
       render(k);
       keepInView($("stage"), k * COL);
       const kd = kind(old, nb);
-      $("readout").innerHTML = `⚡ Point mutation at position <b>${k}</b>: ${tile(old, "nt-xs")} → ${tile(nb, "nt-xs")} <span class="${kd === "ts" ? "ro-warn" : "ro-bad"}">(${kd === "ts" ? "transition" : "transversion"})</span>. ${s1[k] === nb ? "This one happened to <em>revert</em> a difference, a <b>back-mutation</b>. Multiple hits like this are why Jukes–Cantor corrects p." : ""}`;
+      $("readout").innerHTML = `⚡ מוטציה נקודתית בעמדה <b>${k}</b>: ${ltr(`${tile(old, "nt-xs")} → ${tile(nb, "nt-xs")}`)} <span class="${kd === "ts" ? "ro-warn" : "ro-bad"}">(${KIND_HE[kd]})</span>. ${s1[k] === nb ? "המוטציה הזו דווקא <em>ביטלה</em> הבדל קיים: זו <b>מוטציה חוזרת</b> (back-mutation). פגיעות מרובות כאלה הן הסיבה שתיקון Jukes–Cantor נחוץ." : ""}`;
     }
 
     $("scan").addEventListener("click", scan);
@@ -531,22 +535,22 @@
   function motif(root) {
     const T = timers();
     root.innerHTML = shell(
-      "Sliding-window motif search",
-      "The window slides one base at a time. Each step compares a single character.",
+      "חיפוש מוטיב בחלון נע",
+      "החלון זז בסיס אחד בכל פעם. כל צעד משווה תו בודד.",
       `
       <div class="viz-controls col">
         <div class="field-pair field-pair-wide">
-          <label class="field"><span class="field-label">DNA (text)</span><input class="input mono" data-ref="dna" value="GATATATGCATATACTT" maxlength="60" spellcheck="false" autocomplete="off"></label>
-          <label class="field"><span class="field-label">Motif (pattern)</span><input class="input mono" data-ref="motif" value="ATAT" maxlength="12" spellcheck="false" autocomplete="off"></label>
+          <label class="field"><span class="field-label">DNA (טקסט)</span><input class="input mono" dir="ltr" data-ref="dna" value="GATATATGCATATACTT" maxlength="60" spellcheck="false" autocomplete="off"></label>
+          <label class="field"><span class="field-label">מוטיב (תבנית)</span><input class="input mono" dir="ltr" data-ref="motif" value="ATAT" maxlength="12" spellcheck="false" autocomplete="off"></label>
         </div>
         <div class="btn-row">
-          <button class="btn btn-primary btn-sm" data-ref="play">▶ Scan</button>
-          <button class="btn btn-sm" data-ref="step">Step</button>
-          <button class="btn btn-ghost btn-sm" data-ref="reset">Reset</button>
+          <button class="btn btn-primary btn-sm" data-ref="play">▶ סריקה</button>
+          <button class="btn btn-sm" data-ref="step">צעד</button>
+          <button class="btn btn-ghost btn-sm" data-ref="reset">איפוס</button>
           ${speedSelect}
         </div>
       </div>
-      <div class="viz-stage" data-ref="stage">
+      <div class="viz-stage" dir="ltr" data-ref="stage">
         <div class="mf-track" data-ref="track">
           <div class="mf-hits" data-ref="hits"></div>
           <div class="mf-row" data-ref="text"></div>
@@ -556,10 +560,10 @@
         </div>
       </div>
       <div class="stat-grid stat-grid-4">
-        <div class="stat"><div class="stat-k">Window i</div><div class="stat-v" data-ref="sI">–</div></div>
-        <div class="stat"><div class="stat-k">Comparisons</div><div class="stat-v" data-ref="sC">0</div></div>
-        <div class="stat"><div class="stat-k">Worst case (n−m+1)·m</div><div class="stat-v" data-ref="sW">–</div></div>
-        <div class="stat stat-accent"><div class="stat-k">Matches</div><div class="stat-v mono" data-ref="sM">[]</div></div>
+        <div class="stat"><div class="stat-k">חלון i</div><div class="stat-v" dir="ltr" data-ref="sI">–</div></div>
+        <div class="stat"><div class="stat-k">השוואות</div><div class="stat-v" dir="ltr" data-ref="sC">0</div></div>
+        <div class="stat"><div class="stat-k">מקרה גרוע ${ltr("(n−m+1)·m")}</div><div class="stat-v" dir="ltr" data-ref="sW">–</div></div>
+        <div class="stat stat-accent"><div class="stat-k">התאמות</div><div class="stat-v mono" dir="ltr" data-ref="sM">[]</div></div>
       </div>
       <div class="viz-readout" data-ref="readout"></div>`
     );
@@ -607,13 +611,13 @@
         $("pat").style.opacity = 0;
         $("sI").textContent = "–";
         $("readout").innerHTML = !m
-          ? `<span class="ro-warn">Empty motif:</span> nothing to search for, so your function should return <code>[]</code>.`
-          : `<span class="ro-warn">Motif longer than the DNA:</span> zero windows fit (n − m + 1 ≤ 0), so the result is <code>[]</code>.`;
+          ? `<span class="ro-warn">מוטיב ריק:</span> אין מה לחפש, ולכן הפונקציה שלכם צריכה להחזיר <code>[]</code>.`
+          : `<span class="ro-warn">המוטיב ארוך מה-DNA:</span> אף חלון לא נכנס (${ltr("n − m + 1 ≤ 0")}), ולכן התוצאה היא <code>[]</code>.`;
         return;
       }
       $("win").style.opacity = 1;
       $("pat").style.opacity = 1;
-      $("readout").innerHTML = `${n - m + 1} windows to check (n = ${n}, m = ${m}). Press <b>Scan</b> or <b>Step</b>.`;
+      $("readout").innerHTML = `יש ${n - m + 1} חלונות לבדוק (${ltr(`n = ${n}, m = ${m}`)}). לחצו <b>סריקה</b> או <b>צעד</b>.`;
     }
 
     function position() {
@@ -643,7 +647,7 @@
         }
         position();
         keepInView($("stage"), (i + m) * COL);
-        $("readout").innerHTML = `Slide window → <b>i = ${i}</b>`;
+        $("readout").innerHTML = `מזיזים את החלון ← <b>${ltr(`i = ${i}`)}</b>`;
         return true;
       }
       const a = dna[i + j];
@@ -661,13 +665,13 @@
           $("hits").insertAdjacentHTML("beforeend", `<span class="mf-hit" style="transform:translateX(${i * COL}px)">▼${i}</span>`);
           $("sM").textContent = `[${hits.join(", ")}]`;
           const overlap = hits.length > 1 && hits[hits.length - 2] + m > i;
-          $("readout").innerHTML = `<span class="ro-good">✓ Match at index ${i}!</span> All ${m} characters agree.${overlap ? ` <b>It overlaps</b> the previous match, which <code>str.count</code> would have missed.` : ""}`;
+          $("readout").innerHTML = `<span class="ro-good">✓ התאמה באינדקס ${i}!</span> כל ${m} התווים זהים.${overlap ? ` <b>היא חופפת</b> להתאמה הקודמת, כזו ש-<code>str.count</code> היה מפספס.` : ""}`;
           advance = true;
         } else {
-          $("readout").innerHTML = `text[${i + j - 1}] = ${tile(a, "nt-xs")} equals motif[${j - 1}] = ${tile(b, "nt-xs")}, so extend the comparison.`;
+          $("readout").innerHTML = `${ltr(`text[${i + j - 1}] = ${tile(a, "nt-xs")} = motif[${j - 1}] = ${tile(b, "nt-xs")}`)}: התווים שווים, ממשיכים להשוות.`;
         }
       } else {
-        $("readout").innerHTML = `text[${i + j}] = ${tile(a, "nt-xs")} ≠ motif[${j}] = ${tile(b, "nt-xs")}. <span class="ro-bad">Mismatch:</span> abandon this window early.`;
+        $("readout").innerHTML = `${ltr(`text[${i + j}] = ${tile(a, "nt-xs")} ≠ motif[${j}] = ${tile(b, "nt-xs")}`)}: <span class="ro-bad">אי-התאמה.</span> נוטשים את החלון הזה מוקדם.`;
         advance = true;
       }
       return true;
@@ -680,7 +684,7 @@
       const n = dna.length;
       const m = pat.length;
       const worst = (n - m + 1) * m;
-      $("readout").innerHTML = `<b>Scan complete.</b> ${n - m + 1} windows, <b>${comps}</b> character comparisons (worst case ${worst}; early exits saved ${worst - comps}). Result: <code>[${hits.join(", ")}]</code>`;
+      $("readout").innerHTML = `<b>הסריקה הסתיימה.</b> ${n - m + 1} חלונות, <b>${comps}</b> השוואות תווים (במקרה הגרוע ${worst}; יציאות מוקדמות חסכו ${worst - comps}). התוצאה: <code>[${hits.join(", ")}]</code>`;
       pause();
       return false;
     }
@@ -694,13 +698,13 @@
       if (done) build();
       if (done) return; // invalid input
       playing = true;
-      $("play").textContent = "❚❚ Pause";
+      $("play").textContent = "❚❚ השהיה";
       tick();
     }
     function pause() {
       playing = false;
       T.clear();
-      $("play").textContent = "▶ Scan";
+      $("play").textContent = "▶ סריקה";
     }
 
     $("play").addEventListener("click", play);

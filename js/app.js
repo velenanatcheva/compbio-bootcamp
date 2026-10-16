@@ -1,11 +1,13 @@
 /* ==========================================================================
    App — routing, layout, persistence and the Run/Submit flow.
+   The document is RTL (Hebrew); code, editor and console are pinned LTR.
    ========================================================================== */
 (function () {
   const { Store, Runner, MODULES, Visuals, Editor, Console } = window.CBB;
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
   const isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+  const isRTL = () => document.documentElement.dir === "rtl";
 
   const ui = {
     nav: $("#moduleNav"),
@@ -35,6 +37,11 @@
     onSubmit: () => execute("submit"),
   });
 
+  /** Keep code LTR inside Hebrew text: every <code>/<pre> gets dir="ltr" (bidi isolation). */
+  function pinCodeLTR(root) {
+    $$("code, pre", root).forEach((el) => el.setAttribute("dir", "ltr"));
+  }
+
   /* ───────────── Toasts ───────────── */
   function toast(html, kind = "info", ms = 3200) {
     const el = document.createElement("div");
@@ -57,7 +64,7 @@
           <span class="nav-num">${solved ? '<svg viewBox="0 0 24 24" width="13" height="13"><path d="M5 12.5l4.2 4.2L19 7" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>' : m.number}</span>
           <span class="nav-text">
             <span class="nav-title">${m.short}</span>
-            <span class="nav-meta"><span class="diff diff-${m.difficulty.toLowerCase()}">${m.difficulty}</span> · ${m.minutes} min</span>
+            <span class="nav-meta"><span class="diff diff-${m.level}">${m.difficulty}</span> · ${m.minutes} דק׳</span>
           </span>
         </a>`;
     }).join("");
@@ -73,8 +80,8 @@
     const next = MODULES[idx + 1];
     return `
       <div class="doc-nav">
-        ${prev ? `<a class="doc-nav-link" href="#/${prev.id}"><span class="dn-k">← Previous</span><span class="dn-v">${prev.title}</span></a>` : "<span></span>"}
-        ${next ? `<a class="doc-nav-link next" href="#/${next.id}"><span class="dn-k">Next →</span><span class="dn-v">${next.title}</span></a>` : `<div class="doc-nav-end">🎓 Final module of the course</div>`}
+        ${prev ? `<a class="doc-nav-link" href="#/${prev.id}"><span class="dn-k">→ הקודם</span><span class="dn-v">${prev.title}</span></a>` : "<span></span>"}
+        ${next ? `<a class="doc-nav-link next" href="#/${next.id}"><span class="dn-k">הבא ←</span><span class="dn-v">${next.title}</span></a>` : `<div class="doc-nav-end">🎓 זהו המודול האחרון בקורס</div>`}
       </div>`;
   }
 
@@ -84,10 +91,11 @@
     ui.lesson.innerHTML =
       mod.lesson +
       `<div class="cta-card">
-         <div><div class="cta-title">Ready to code?</div><div class="cta-sub">Implement <code>${mod.fnName}()</code> in the editor →</div></div>
-         <button class="btn btn-primary btn-sm" data-goto="problem">Open problem</button>
+         <div><div class="cta-title">מוכנים לכתוב קוד?</div><div class="cta-sub">ממשו את <code>${mod.fnName}()</code> בעורך.</div></div>
+         <button class="btn btn-primary btn-sm" data-goto="problem">לתרגיל</button>
        </div>` +
       navFooter(mod);
+    pinCodeLTR(ui.lesson);
     Editor.highlight(ui.lesson);
     $$("[data-viz]", ui.lesson).forEach((el) => {
       const factory = Visuals[el.dataset.viz];
@@ -99,13 +107,13 @@
     const p = mod.problem;
     const solved = Store.isSolved(mod.id);
     ui.problem.innerHTML = `
-      <p class="eyebrow">Module ${mod.number} · Coding challenge</p>
+      <p class="eyebrow">מודול ${mod.number} · אתגר קוד</p>
       <div class="problem-head">
-        <h1>${mod.number}. ${mod.fnName}</h1>
+        <h1 dir="ltr">${mod.number}. ${mod.fnName}</h1>
         <div class="problem-meta">
-          <span class="diff diff-${mod.difficulty.toLowerCase()}">${mod.difficulty}</span>
+          <span class="diff diff-${mod.level}">${mod.difficulty}</span>
           ${mod.topics.map((t) => `<span class="tag">${t}</span>`).join("")}
-          ${solved ? '<span class="tag tag-solved">✓ Solved</span>' : ""}
+          ${solved ? '<span class="tag tag-solved">✓ נפתר</span>' : ""}
         </div>
       </div>
       <div class="problem-statement">${p.statement}</div>
@@ -113,35 +121,36 @@
         .map(
           (ex, i) => `
         <div class="example">
-          <div class="example-title">Example ${i + 1}</div>
+          <div class="example-title">דוגמה ${i + 1}</div>
           <div class="example-body">
-            <div><span class="ex-k">Input:</span> <code class="ex-v">${ex.input.replace(/\n/g, "<br>")}</code></div>
-            <div><span class="ex-k">Output:</span> <code class="ex-v">${ex.output}</code></div>
-            ${ex.explanation ? `<div><span class="ex-k">Explanation:</span> ${ex.explanation}</div>` : ""}
+            <div><span class="ex-k">קלט:</span> <code class="ex-v">${ex.input.replace(/\n/g, "<br>")}</code></div>
+            <div><span class="ex-k">פלט:</span> <code class="ex-v">${ex.output}</code></div>
+            ${ex.explanation ? `<div><span class="ex-k">הסבר:</span> ${ex.explanation}</div>` : ""}
           </div>
         </div>`
         )
         .join("")}
-      <h3>Constraints</h3>
+      <h3>אילוצים</h3>
       <ul class="constraints">${p.constraints.map((c) => `<li>${c}</li>`).join("")}</ul>
-      <h3>Hints</h3>
+      <h3>רמזים</h3>
       <div class="hints">
-        ${p.hints.map((h, i) => `<details class="hint"><summary>💡 Hint ${i + 1}</summary><div>${h}</div></details>`).join("")}
+        ${p.hints.map((h, i) => `<details class="hint"><summary>💡 רמז ${i + 1}</summary><div>${h}</div></details>`).join("")}
       </div>
       <div class="solution-box">
         <details class="hint solution" ${solved ? "" : 'data-locked="1"'}>
-          <summary>🔑 Reference solution ${solved ? "" : '<span class="muted small">(try it yourself first)</span>'}</summary>
+          <summary>🔑 פתרון לדוגמה ${solved ? "" : '<span class="muted small">(נסו קודם בעצמכם)</span>'}</summary>
           <pre class="code" data-lang="python">${mod.solution.replace(/&/g, "&amp;").replace(/</g, "&lt;")}</pre>
         </details>
       </div>
       <div class="cta-card">
-        <div><div class="cta-title">Need the background?</div><div class="cta-sub">The lesson covers the biology and the algorithm.</div></div>
-        <button class="btn btn-sm" data-goto="lesson">Back to lesson</button>
+        <div><div class="cta-title">צריכים רקע?</div><div class="cta-sub">השיעור מסביר את הביולוגיה ואת האלגוריתם.</div></div>
+        <button class="btn btn-sm" data-goto="lesson">חזרה לשיעור</button>
       </div>`;
+    pinCodeLTR(ui.problem);
     Editor.highlight(ui.problem);
     const sol = $(".solution", ui.problem);
     sol.addEventListener("toggle", () => {
-      if (sol.open && sol.dataset.locked && !confirm("Reveal the reference solution? You'll learn more by trying first, but it's here if you're stuck.")) {
+      if (sol.open && sol.dataset.locked && !confirm("להציג את הפתרון לדוגמה? תלמדו יותר אם תנסו קודם בעצמכם, אבל הוא כאן אם נתקעתם.")) {
         sol.open = false;
       } else if (sol.open) {
         delete sol.dataset.locked;
@@ -180,11 +189,11 @@
     Store.setLast(mod.id);
     document.title = `${mod.short} · CompBio Bootcamp`;
 
-    $("#crumbModule").textContent = `Module ${mod.number}`;
+    $("#crumbModule").textContent = `מודול ${mod.number}`;
     $("#crumbTitle").textContent = mod.title;
     const badge = $("#crumbDifficulty");
     badge.textContent = mod.difficulty;
-    badge.className = `badge diff diff-${mod.difficulty.toLowerCase()}`;
+    badge.className = `badge diff diff-${mod.level}`;
 
     renderSidebar();
     renderLesson(mod);
@@ -193,7 +202,7 @@
 
     const saved = Store.getCode(mod.id);
     editor.load(mod.id, saved !== null ? saved : mod.starter);
-    ui.saveIndicator.textContent = "Saved";
+    ui.saveIndicator.textContent = "נשמר";
     ui.saveIndicator.classList.remove("dirty");
 
     consoleView.preview(mod);
@@ -203,7 +212,7 @@
 
   /* ───────────── Persistence ───────────── */
   function scheduleSave() {
-    ui.saveIndicator.textContent = "Saving…";
+    ui.saveIndicator.textContent = "שומר…";
     ui.saveIndicator.classList.add("dirty");
     clearTimeout(saveTimer);
     saveTimer = setTimeout(flushSave, 400);
@@ -214,7 +223,7 @@
     clearTimeout(saveTimer);
     saveTimer = null;
     const ok = Store.saveCode(current.id, editor.getValue());
-    ui.saveIndicator.textContent = ok ? "Saved" : "Not saved (storage blocked)";
+    ui.saveIndicator.textContent = ok ? "נשמר" : "לא נשמר (האחסון חסום)";
     ui.saveIndicator.classList.remove("dirty");
   }
 
@@ -222,7 +231,7 @@
   async function execute(mode) {
     if (busy || !current) return;
     if (Runner.status.state === "error") {
-      toast("Python runtime failed to load. Retrying…", "error");
+      toast("סביבת Python לא נטענה. מנסה שוב…", "error");
       Runner.retry();
     }
     busy = true;
@@ -256,17 +265,17 @@
     const tests = $("#consoleTests");
     tests.insertAdjacentHTML(
       "afterbegin",
-      `<div class="next-card">
+      `<div class="next-card" dir="rtl">
          <div class="next-emoji">${next ? "🧬" : "🎓"}</div>
          <div class="next-text">
-           <div class="next-title">${next ? `Module ${mod.number} complete!` : "Bootcamp complete!"}</div>
-           <div class="next-sub">${next ? `Up next: <b>${next.title}</b>` : "You've finished every module. You're ready for Rosalind's Bioinformatics Stronghold."}</div>
+           <div class="next-title">${next ? `מודול ${mod.number} הושלם!` : "סיימתם את ה-Bootcamp!"}</div>
+           <div class="next-sub">${next ? `הבא בתור: <b>${next.title}</b>` : "השלמתם את כל המודולים. אתם מוכנים ל-Bioinformatics Stronghold של Rosalind."}</div>
          </div>
-         ${next ? `<a class="btn btn-primary btn-sm" href="#/${next.id}">Continue →</a>` : ""}
+         ${next ? `<a class="btn btn-primary btn-sm" href="#/${next.id}">להמשך ←</a>` : ""}
        </div>`
     );
     if (first) {
-      toast(`<b>Accepted!</b> ${mod.short} solved · ${Store.solvedCount()}/${MODULES.length} complete`, "success", 4200);
+      toast(`<b>התקבל!</b> ${mod.short} נפתר · ${Store.solvedCount()}/${MODULES.length} הושלמו`, "success", 4200);
       confetti();
     }
   }
@@ -296,15 +305,46 @@
     ui.submitBtn.classList.toggle("loading", mode === "submit");
   }
 
+  /* ───────────── Runnable lesson examples ───────────── */
+  async function runExample(btn) {
+    const box = btn.closest(".demo-code");
+    const out = $(".demo-out", box);
+    const hint = $(".demo-hint", box);
+    if (btn.disabled) return;
+    btn.disabled = true;
+    btn.classList.add("loading");
+    hint.textContent = Runner.isReady ? "מריץ…" : "טוען את Python…";
+    const res = await Runner.exec($("pre.code", box).textContent);
+    btn.disabled = false;
+    btn.classList.remove("loading");
+    out.hidden = false;
+    out.classList.remove("demo-out-error");
+    if (res.timeout) {
+      out.textContent = `TimeoutError: the example ran for more than ${res.limit / 1000}s`;
+      out.classList.add("demo-out-error");
+      hint.textContent = "חריגה ממגבלת הזמן";
+    } else if (res.internalError) {
+      out.textContent = res.internalError;
+      out.classList.add("demo-out-error");
+      hint.textContent = "סביבת Python אינה זמינה";
+    } else {
+      const r = res.result;
+      out.textContent = (r.stdout || "") + (r.error ? (r.stdout ? "\n" : "") + r.error : "");
+      if (!out.textContent) out.textContent = "(no output)";
+      if (r.error) out.classList.add("demo-out-error");
+      hint.textContent = r.error ? "הדוגמה נכשלה" : "✓ הורץ בהצלחה";
+    }
+  }
+
   /* ───────────── Python status pill ───────────── */
   Runner.onStatus(({ state, detail }) => {
     ui.pyStatus.dataset.state = state;
     const text = $(".py-text", ui.pyStatus);
-    if (state === "loading") text.textContent = detail || "Loading Python…";
-    else if (state === "ready") text.textContent = `${detail} · Ready`;
-    else if (state === "running") text.textContent = "Running…";
+    if (state === "loading") text.textContent = detail || "טוען Python…";
+    else if (state === "ready") text.textContent = `${detail} · מוכן`;
+    else if (state === "running") text.textContent = "מריץ…";
     else {
-      text.textContent = "Runtime error · Retry";
+      text.textContent = "שגיאה בסביבה · נסו שוב";
       ui.pyStatus.title = detail;
     }
   });
@@ -346,8 +386,10 @@
     $("#gutterX"),
     "x",
     (e) => {
+      // The lesson pane sits on the inline-start side: the right edge in RTL.
       const r = $("#workspace").getBoundingClientRect();
-      applyLeftWidth(((e.clientX - r.left) / r.width) * 100);
+      const fromStart = isRTL() ? r.right - e.clientX : e.clientX - r.left;
+      applyLeftWidth((fromStart / r.width) * 100);
     },
     "leftWidth"
   );
@@ -376,6 +418,8 @@
   document.addEventListener("click", (e) => {
     const go = e.target.closest("[data-goto]");
     if (go) setTab(go.dataset.goto);
+    const ex = e.target.closest("[data-run-example]");
+    if (ex) runExample(ex);
   });
 
   ui.runBtn.addEventListener("click", () => execute("run"));
@@ -383,13 +427,13 @@
 
   $("#resetCodeBtn").addEventListener("click", () => {
     if (!current) return;
-    if (!confirm("Reset the editor to the starter code? (You can undo with ⌘/Ctrl+Z)")) return;
+    if (!confirm("לאפס את העורך לקוד ההתחלתי? (אפשר לבטל עם ⌘/Ctrl+Z)")) return;
     editor.setValue(current.starter);
     editor.focus();
   });
   $("#clearConsoleBtn").addEventListener("click", () => current && consoleView.preview(current));
   $("#resetAllBtn").addEventListener("click", () => {
-    if (!confirm("Erase all saved code and progress for every module? This cannot be undone.")) return;
+    if (!confirm("למחוק את כל הקוד השמור ואת ההתקדמות בכל המודולים? אי אפשר לבטל את הפעולה.")) return;
     Store.resetAll();
     location.hash = "#/m1";
     location.reload();

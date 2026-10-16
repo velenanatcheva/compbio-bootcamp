@@ -34,7 +34,8 @@
   --base-c: #60a5fa;
   --base-u: #c084fc;
 
-  --font: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* Inter renders Latin; Hebrew glyphs fall through to Heebo */
+  --font: "Inter", "Heebo", ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Arial Hebrew", sans-serif;
   --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --radius: 10px;
   --radius-sm: 7px;
@@ -56,6 +57,16 @@ body {
 a { color: var(--accent-hi); text-decoration: none; }
 button { font: inherit; color: inherit; }
 code, kbd, pre { font-family: var(--mono); }
+/* Code is always LTR, even inside Hebrew paragraphs (isolated bidi run) */
+code, pre, kbd { direction: ltr; unicode-bidi: isolate; }
+/* No programming ligatures: learners must see != and >= exactly as typed */
+code, pre, kbd, .CodeMirror, .editor-fallback, .input.mono, .mono { font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
+.he { unicode-bidi: isolate; }
+.ltr-inline { direction: ltr; unicode-bidi: isolate; }
+/* Hebrew has no case; letter-spaced uppercase labels look wrong in it */
+:lang(he) .nav-label, :lang(he) .eyebrow, :lang(he) .objectives-title, :lang(he) .field-label,
+:lang(he) .stat-k, :lang(he) .cx-label, :lang(he) .vs-k, :lang(he) .io-label, :lang(he) .table th,
+:lang(he) .demo-badge { letter-spacing: 0; }
 [hidden] { display: none !important; }
 ::selection { background: rgba(124, 92, 255, 0.35); }
 
@@ -74,7 +85,7 @@ code, kbd, pre { font-family: var(--mono); }
   width: var(--sidebar-w);
   flex-shrink: 0;
   background: var(--bg-elev);
-  border-right: 1px solid var(--border);
+  border-inline-end: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   padding: 16px 12px;
@@ -127,8 +138,8 @@ code, kbd, pre { font-family: var(--mono); }
 .nav-item:hover { background: var(--panel); color: var(--text); }
 .nav-item.active { background: var(--accent-soft); color: var(--text); border-color: rgba(124, 92, 255, 0.28); }
 .nav-item.active::before {
-  content: ""; position: absolute; left: -12px; top: 10px; bottom: 10px; width: 3px;
-  background: var(--accent); border-radius: 0 3px 3px 0;
+  content: ""; position: absolute; inset-inline-start: -12px; top: 10px; bottom: 10px; width: 3px;
+  background: var(--accent); border-radius: 3px;
 }
 .nav-num {
   width: 26px; height: 26px; border-radius: 50%;
@@ -148,8 +159,8 @@ code, kbd, pre { font-family: var(--mono); }
   display: flex; flex-direction: column; gap: 6px;
   padding: 10px 10px; border: 1px dashed var(--border); border-radius: var(--radius);
 }
-.shortcuts div { display: flex; align-items: center; gap: 3px; }
-.shortcuts span { margin-left: 6px; }
+.shortcuts div { display: flex; align-items: center; gap: 8px; }
+.shortcuts .kbds { display: inline-flex; gap: 3px; min-width: 70px; }
 kbd {
   font-size: 10.5px; min-width: 20px; text-align: center;
   padding: 1px 5px; border-radius: 5px;
@@ -166,7 +177,7 @@ kbd {
 .topbar {
   height: var(--topbar-h); flex-shrink: 0;
   display: flex; align-items: center; gap: 12px;
-  padding: 0 14px 0 18px;
+  padding-inline: 18px 14px;
   background: var(--bg-elev);
   border-bottom: 1px solid var(--border);
 }
@@ -179,14 +190,14 @@ kbd {
   font-size: 11px; padding: 2px 8px; border-radius: 20px;
   background: var(--panel-2); border: 1px solid var(--border);
 }
-.topbar-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.topbar-actions { margin-inline-start: auto; display: flex; align-items: center; gap: 8px; }
 
 .py-status {
   display: flex; align-items: center; gap: 8px;
   font-size: 12px; color: var(--text-dim);
   padding: 5px 11px; border-radius: 20px;
   background: var(--panel); border: 1px solid var(--border);
-  white-space: nowrap; margin-right: 4px;
+  white-space: nowrap; margin-inline-end: 4px;
 }
 .py-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-faint); }
 .py-status[data-state="loading"] .py-dot { background: var(--warn); animation: pulse 1.2s ease-in-out infinite; }
@@ -233,7 +244,7 @@ kbd {
 .btn-submit:hover { background: linear-gradient(180deg, #4fd066, #34ad4a); border-color: #56d364; }
 .btn.loading > svg { visibility: hidden; }
 .btn.loading::after {
-  content: ""; position: absolute; left: 13px; width: 13px; height: 13px;
+  content: ""; position: absolute; inset-inline-start: 13px; width: 13px; height: 13px;
   border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
@@ -323,12 +334,12 @@ textarea.input { resize: vertical; min-height: 54px; line-height: 1.55; word-bre
 .console-panel { flex: 1; }
 .panel-head { justify-content: space-between; }
 .panel-actions { display: flex; align-items: center; gap: 4px; }
-.file-tab { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 550; padding-left: 6px; }
-.save-indicator { font-size: 11px; color: var(--text-faint); font-weight: 400; margin-left: 4px; }
+.file-tab { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 550; padding-inline-start: 6px; }
+.save-indicator { font-size: 11px; color: var(--text-faint); font-weight: 400; margin-inline-start: 4px; }
 .save-indicator.dirty { color: var(--warn); }
 .lang-pill {
   font-size: 11px; color: var(--text-dim);
-  padding: 2px 8px; border: 1px solid var(--border-strong); border-radius: 6px; margin-right: 4px;
+  padding: 2px 8px; border: 1px solid var(--border-strong); border-radius: 6px; margin-inline-end: 4px;
 }
 
 /* ───────────── Editor ───────────── */
@@ -429,7 +440,7 @@ textarea.input { resize: vertical; min-height: 54px; line-height: 1.55; word-bre
 .case-pass .case-icon { background: var(--success-soft); color: var(--success); }
 .case-fail .case-icon { background: var(--danger-soft); color: var(--danger); }
 .case-label { display: inline-flex; align-items: center; gap: 6px; font-weight: 550; font-size: 13px; }
-.case-ms { margin-left: auto; font-family: var(--mono); font-size: 11.5px; color: var(--text-faint); }
+.case-ms { margin-inline-start: auto; font-family: var(--mono); font-size: 11.5px; color: var(--text-faint); }
 .chev { color: var(--text-faint); transition: transform 0.15s; }
 details[open] > summary .chev { transform: rotate(90deg); }
 .case-body { padding: 4px 12px 12px; display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--border); }
@@ -475,7 +486,7 @@ details[open] > summary .chev { transform: rotate(90deg); }
 @keyframes rise { from { opacity: 0; transform: translateY(6px); } }
 
 /* ───────────── Toasts & confetti ───────────── */
-.toasts { position: fixed; right: 18px; bottom: 18px; display: flex; flex-direction: column; gap: 8px; z-index: 100; }
+.toasts { position: fixed; inset-inline-start: 18px; bottom: 18px; display: flex; flex-direction: column; gap: 8px; z-index: 100; }
 .toast {
   padding: 11px 16px; border-radius: 10px; font-size: 13px;
   background: var(--panel-3); border: 1px solid var(--border-strong); box-shadow: var(--shadow);
@@ -504,11 +515,12 @@ details[open] > summary .chev { transform: rotate(90deg); }
   body { overflow: auto; }
   .app { height: auto; min-height: 100dvh; }
   .sidebar {
-    position: fixed; z-index: 50; top: 0; bottom: 0; left: 0;
+    position: fixed; z-index: 50; top: 0; bottom: 0; inset-inline-start: 0;
     transform: translateX(-100%); transition: transform 0.25s ease;
     width: 280px;
   }
-  .sidebar-open .sidebar { transform: none; box-shadow: var(--shadow); }
+  [dir="rtl"] .sidebar { transform: translateX(100%); }
+  .sidebar-open .sidebar { transform: none !important; box-shadow: var(--shadow); }
   .scrim { position: fixed; inset: 0; z-index: 40; background: rgba(0, 0, 0, 0.55); }
   .sidebar-open .scrim { display: block; }
   .menu-btn { display: grid; }

@@ -22,7 +22,7 @@
 
   function boot() {
     if (worker) worker.terminate();
-    emit("loading", version ? "Restarting Python…" : "Loading Python…");
+    emit("loading", version ? "מפעיל מחדש את Python…" : "טוען Python…");
 
     readyPromise = new Promise((resolve, reject) => {
       try {
@@ -30,7 +30,7 @@
       } catch (err) {
         const msg =
           location.protocol === "file:"
-            ? "Web Workers are blocked on file:// — serve the folder over HTTP (see README)."
+            ? "הדפדפן חוסם Web Workers בכתובת file://. הגישו את התיקייה דרך שרת HTTP (ראו README)."
             : String(err.message || err);
         emit("error", msg);
         reject(new Error(msg));
@@ -57,7 +57,7 @@
       };
 
       worker.onerror = (e) => {
-        const msg = e.message || "Python worker failed to start (check your network connection).";
+        const msg = e.message || "סביבת Python לא הצליחה לעלות (בדקו את החיבור לאינטרנט).";
         emit("error", msg);
         reject(new Error(msg));
       };
@@ -66,11 +66,8 @@
     return readyPromise;
   }
 
-  /**
-   * Run `code`, call `fnName` against `tests`.
-   * Resolves to { result } | { timeout: true } | { internalError }.
-   */
-  async function run(code, fnName, tests) {
+  /** Send one job to the worker with a time limit. */
+  async function dispatch(payload) {
     try {
       await readyPromise;
     } catch (err) {
@@ -78,20 +75,30 @@
     }
     return new Promise((resolve) => {
       const id = ++seq;
-      emit("running", "Running…");
+      emit("running", "מריץ…");
       const timer = setTimeout(() => {
         pending.delete(id);
         boot(); // kill the stuck interpreter and start a fresh one
         resolve({ timeout: true, limit: TIME_LIMIT_MS });
       }, TIME_LIMIT_MS);
       pending.set(id, { resolve, timer });
-      worker.postMessage({ id, code, fnName, tests });
+      worker.postMessage({ id, ...payload });
     });
   }
+
+  /**
+   * Run `code`, call `fnName` against `tests`.
+   * Resolves to { result } | { timeout: true } | { internalError }.
+   */
+  const run = (code, fnName, tests) => dispatch({ kind: "tests", code, fnName, tests });
+
+  /** Run a lesson example as a plain script. result = { stdout, error }. */
+  const exec = (code) => dispatch({ kind: "snippet", code });
 
   CBB.Runner = {
     boot,
     run,
+    exec,
     retry: boot,
     get status() {
       return status;
