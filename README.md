@@ -37,6 +37,10 @@ All paths are relative, so it also works from a project subpath.
 | 5 | Translating RNA to Protein | Ribosome walking codons, amino-acid chain, genetic-code table | `translate_rna(rna_sequence)` |
 | 6 | Open Reading Frames (ORFs) | Three reading frames with start/stop codons and a step-through ORF scanner | `find_first_orf(rna)` |
 | 7 | Sequence Alignment Scoring | Column-by-column scoring with editable match/mismatch/gap and a cumulative-score chart | `score_alignment(seq1, seq2)` |
+| 8 | Reverse Complement | Complement-then-reverse animation with 5′/3′ strand labels and palindrome detection | `reverse_complement(dna)` |
+| 9 | K-mer Frequencies | Sliding k-window with a live, sorted frequency table | `count_kmers(dna, k)` |
+| 10 | Profile Matrices & Consensus | Column-by-column profile matrix with tie highlighting and consensus row | `consensus_sequence(dna_list)` |
+| 11 | Dynamic Programming: Alignment Matrix | Needleman–Wunsch grid: initialisation, cell-by-cell fill and traceback | `init_dp_matrix(seq1, seq2, gap_penalty)` |
 
 Each module also has a **Code Examples** (דוגמאות קוד) section right before the coding task: ready-made Python programs you can run in the browser, each with a step-by-step Hebrew walkthrough.
 
@@ -51,8 +55,10 @@ css/visuals.css     Lesson typography + Visual Lab components
 js/storage.js       localStorage persistence (code, progress, pane sizes)
 js/curriculum.js    Modules 1–4 as data: lessons, problems, tests, solutions
 js/curriculum-advanced.js  Modules 5–7 (appended to CBB.MODULES) + the shared genetic code
+js/curriculum-expert.js    Modules 8–11 (appended after 5–7)
 js/visuals.js       DOM-based interactive labs (one factory per lab)
 js/visuals-advanced.js     Labs for modules 5–7 (translation, ORF scanner, alignment scoring)
+js/visuals-expert.js       Labs for modules 8–11 (reverse complement, k-mers, profile, DP grid)
 js/pyworker.js      Web Worker: loads Pyodide and runs the Python test harness
 js/runner.js        Worker lifecycle, 8 s time limit (kills + restarts on infinite loops)
 js/editor.js        CodeMirror 5 wrapper (per-module undo history) + textarea fallback
@@ -67,6 +73,7 @@ Add an object to `CBB.MODULES` in `js/curriculum.js` with `id`, `title`, `lesson
 ```js
 { args: ["ACGT"], expected: "ACGU" }                 // exact match (type-checked)
 { args: ["GGCC"], expected: 100.0, tol: 1e-3 }      // float comparison
+{ args: ["AAAA", 2], expected: { AA: 3 } }           // dict (any mapping: dict, Counter, defaultdict)
 { args: ["AC", "ACG"], raises: "ValueError" }        // expects an exception
 { args: [...], expected: ..., hidden: true }         // only runs on Submit
 ```

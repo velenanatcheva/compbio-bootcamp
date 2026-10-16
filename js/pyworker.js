@@ -34,6 +34,11 @@ def _cbb_equal(actual, expected, tol):
         if isinstance(actual, bool) or not isinstance(actual, (int, float)):
             return False
         return math.isclose(actual, expected, rel_tol=1e-9, abs_tol=tol)
+    if isinstance(expected, dict):
+        # Any mapping with the same items counts (dict, Counter, defaultdict...)
+        if not isinstance(actual, dict):
+            return False
+        return dict(actual) == expected
     if isinstance(expected, list):
         if isinstance(actual, (str, bytes)) or not hasattr(actual, "__iter__"):
             return False

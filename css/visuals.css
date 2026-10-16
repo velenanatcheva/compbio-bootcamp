@@ -538,6 +538,90 @@ input[type="range"] { accent-color: var(--accent); cursor: pointer; }
 .al-dot-mismatch { fill: var(--warn); }
 .al-dot-gap { fill: var(--danger); }
 
+/* ───────────── 8. Reverse complement ───────────── */
+.rc-duplex, .rc-result { display: flex; gap: 4px; width: max-content; }
+.rc-col { display: flex; flex-direction: column; align-items: center; width: 26px; }
+.rc-col .rc-comp { opacity: 0; transform: translateY(-8px) scale(0.7); }
+.rc-col.filled .rc-comp { opacity: 1; transform: none; }
+.rc-col .tx-bond { opacity: 0.25; transition: opacity 0.25s; }
+.rc-col.filled .tx-bond { opacity: 1; }
+.rc-col.src .rc-comp { box-shadow: 0 0 0 2px var(--cyan); transform: translateY(3px); }
+.rc-gap { height: 34px; display: flex; align-items: center; }
+.rc-arrow { font-size: 11px; color: var(--cyan); opacity: 0; transition: opacity 0.3s; direction: rtl; }
+.rc-arrow.on { opacity: 1; }
+.rc-slot { opacity: 0.5; }
+.nt.rc-new { animation: rise 0.3s ease; box-shadow: 0 0 0 1.5px var(--base-u); }
+
+/* ───────────── 9. k-mers ───────────── */
+.km-figure { gap: 4px !important; }
+.km-fig-row { display: flex; gap: 4px; align-items: center; }
+.km-fig-seq { margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px dashed var(--border-strong); }
+.km-pad { width: 26px; flex-shrink: 0; }
+.km-fig-label { font: 500 10.5px var(--mono); color: var(--text-faint); margin-left: 10px; }
+.km-window { top: -4px !important; }
+.nt.in-win { background: rgba(124, 92, 255, 0.22); color: #fff; }
+.km-table { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
+.km-row { display: grid; grid-template-columns: 90px 1fr 34px; gap: 10px; align-items: center; padding: 3px 8px; border-radius: 7px; transition: background 0.2s; }
+.km-row.just { background: var(--accent-soft); }
+.km-kmer { font-size: 12.5px; color: var(--text); letter-spacing: 0.08em; text-align: left; }
+.km-bar { height: 10px; background: var(--panel-3); border-radius: 6px; overflow: hidden; }  /* grows from the k-mer label side (RTL) */
+.km-bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), var(--cyan)); border-radius: 6px; transition: width 0.3s; }
+.km-count { font: 700 12.5px var(--mono); text-align: left; }
+.km-more, .km-empty { font-size: 12px; color: var(--text-faint); padding: 4px 8px; }
+
+/* ───────────── 10. Profile & consensus ───────────── */
+.profile-wrap { overflow-x: auto; margin: 14px 0 6px; }
+.profile-table { border-collapse: separate; border-spacing: 4px 3px; margin: 0 auto; }
+.profile-table th { font: 600 11px var(--mono); color: var(--text-faint); padding: 0 6px; }
+.profile-table td { padding: 0; text-align: center; }
+.pf-count td, .pf-count td { font: 600 12px var(--mono); }
+.profile-table .pf-count td { width: 26px; height: 24px; border-radius: 5px; background: rgba(124, 92, 255, calc(var(--a) * 0.55)); color: var(--text); }
+.profile-table .pf-count td.pf-max { outline: 2px solid var(--accent-hi); }
+.pf-sep td { height: 6px; border-bottom: 1px dashed var(--border-strong); }
+.pf-cons th { color: var(--warn) !important; font-size: 14px !important; }
+.pf-grid { width: max-content; }
+.pf-line { display: flex; gap: 4px; align-items: center; margin-bottom: 4px; }
+.pf-label { width: 26px; text-align: center; font: 600 10.5px var(--mono); color: var(--text-faint); flex-shrink: 0; }
+.pf-label .nt { width: 22px; height: 22px; font-size: 11px; }
+.pf-star { color: var(--warn); font-size: 14px; }
+.pf-cell, .pf-cons { width: 26px; display: inline-flex; justify-content: center; border-radius: 7px; }
+.pf-cell.col-on .nt { box-shadow: 0 0 0 2px var(--cyan); }
+.pf-divider { height: 1px; border-top: 1px dashed var(--border-strong); margin: 8px 0 8px 30px; }
+.pf-count {
+  width: 26px; height: 24px; border-radius: 5px; display: grid; place-items: center;
+  font: 600 12px var(--mono); color: var(--text);
+  background: rgba(124, 92, 255, calc(var(--a, 0) * 0.55)); border: 1px solid var(--border);
+}
+.pf-count.col-on { border-color: var(--cyan); }
+.pf-count.pf-max { outline: 2px solid var(--accent-hi); outline-offset: -1px; }
+.pf-count.pf-tie { outline-color: var(--warn); }
+.pf-consline { margin-top: 6px; }
+.pf-cons .nt { animation: rise 0.3s ease; }
+
+/* ───────────── 11. Dynamic programming grid ───────────── */
+.dp-wrap { overflow-x: auto; margin: 14px 0 6px; }
+.dp-table { border-collapse: separate; border-spacing: 3px; margin: 0 auto; }
+.dp-table th { font: 700 12.5px var(--mono); color: var(--accent-hi); width: 36px; height: 28px; text-align: center; }
+.dp-table td {
+  width: 36px; height: 30px; text-align: center; border-radius: 6px;
+  font: 600 12px var(--mono); color: var(--text-dim);
+  background: var(--panel-2); border: 1px solid var(--border); transition: background 0.2s, box-shadow 0.2s;
+}
+.dp-table td.dp-init { background: rgba(34, 211, 238, 0.12); border-color: rgba(34, 211, 238, 0.45); color: var(--cyan); }
+.dp-table td.dp-empty { color: var(--text-faint); }
+.dp-table td.dp-filled { color: var(--text); }
+.dp-table td.dp-cur { box-shadow: 0 0 0 2px var(--accent-hi); background: var(--accent-soft); color: #fff; }
+.dp-table td.dp-nb { box-shadow: 0 0 0 2px var(--warn); }
+.dp-table td.dp-path { background: rgba(74, 222, 128, 0.2); border-color: var(--success); color: #fff; }
+.dp-stage { padding: 12px; }
+.dp-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-top: 10px; font-size: 12px; color: var(--text-faint); }
+.dp-legend span:not(.lg-box) { margin-inline-end: 8px; }
+.dp-lg-init { background: rgba(34, 211, 238, 0.25); border: 1px solid var(--cyan); }
+.dp-lg-cur { background: var(--accent-soft); border: 2px solid var(--accent-hi); }
+.dp-lg-nb { border: 2px solid var(--warn); }
+.dp-lg-path { background: rgba(74, 222, 128, 0.3); border: 1px solid var(--success); }
+.dp-align { margin: 8px 0 0; padding: 8px 12px; background: var(--editor-bg); border: 1px solid var(--border); border-radius: 8px; font: 600 13px/1.5 var(--mono); color: var(--text); letter-spacing: 0.15em; display: inline-block; }
+
 /* ───────────── Responsive ───────────── */
 @media (max-width: 720px) {
   .doc { padding: 20px 16px 32px; }

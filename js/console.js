@@ -33,6 +33,10 @@
       const s = "[" + v.map(pyRepr).join(", ") + "]";
       return s.length > 160 ? s.slice(0, 160) + "…]" : s;
     }
+    if (v && typeof v === "object") {
+      const s = "{" + Object.entries(v).map(([k, x]) => `${pyRepr(k)}: ${pyRepr(x)}`).join(", ") + "}";
+      return s.length > 160 ? s.slice(0, 160) + "…}" : s;
+    }
     return String(v);
   };
   const pyExpected = (t) => {

@@ -175,6 +175,7 @@ kbd {
 .diff-easy { color: #2ec4a6; }
 .diff-medium { color: #f5a524; }
 .diff-medium-hard { color: #fb7c3c; }
+.diff-expert { color: #e879f9; }
 .diff-hard { color: #f43f5e; }
 
 /* ───────────── Topbar ───────────── */
