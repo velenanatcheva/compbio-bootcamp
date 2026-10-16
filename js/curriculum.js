@@ -1122,5 +1122,7 @@ for kmer, n in counts.most_common(3):
   };
 
   CBB.MODULES = [m1, m2, m3, m4];
+  // Shared authoring helpers for additional curriculum files (curriculum-advanced.js)
+  CBB.lessonKit = { esc, py, nt, demo, examplesIntro };
   CBB.getModule = (id) => CBB.MODULES.find((m) => m.id === id) || null;
 })();

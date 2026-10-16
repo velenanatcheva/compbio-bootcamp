@@ -722,4 +722,6 @@
   }
 
   CBB.Visuals = { transcription, gc, hamming, motif };
+  // Shared building blocks for additional labs (visuals-advanced.js)
+  CBB.VizKit = { COL, tile, ltr, pick, timers, debounce, shell, speedSelect, refs, keepInView };
 })();

@@ -67,6 +67,9 @@ code, pre, kbd, .CodeMirror, .editor-fallback, .input.mono, .mono { font-variant
 :lang(he) .nav-label, :lang(he) .eyebrow, :lang(he) .objectives-title, :lang(he) .field-label,
 :lang(he) .stat-k, :lang(he) .cx-label, :lang(he) .vs-k, :lang(he) .io-label, :lang(he) .table th,
 :lang(he) .demo-badge { letter-spacing: 0; }
+/* ...and uppercasing would corrupt scientific names (mRNA → MRNA, d_H → DH) */
+:lang(he) .field-label, :lang(he) .stat-k, :lang(he) .cx-label, :lang(he) .vs-k, :lang(he) .io-label,
+:lang(he) .table th, :lang(he) .eyebrow, :lang(he) .objectives-title, :lang(he) .nav-label { text-transform: none; }
 [hidden] { display: none !important; }
 ::selection { background: rgba(124, 92, 255, 0.35); }
 
@@ -171,6 +174,7 @@ kbd {
 .diff { font-weight: 600; }
 .diff-easy { color: #2ec4a6; }
 .diff-medium { color: #f5a524; }
+.diff-medium-hard { color: #fb7c3c; }
 .diff-hard { color: #f43f5e; }
 
 /* ───────────── Topbar ───────────── */

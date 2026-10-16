@@ -34,6 +34,9 @@ All paths are relative, so it also works from a project subpath.
 | 2 | Sequence Analysis & GC Content | Composition stats + temperature-driven DNA melting | `gc_content(dna)` |
 | 3 | Mutations & Hamming Distance | Strand comparison, transitions/transversions, Jukes–Cantor | `hamming_distance(seq1, seq2)` |
 | 4 | Motif Finding | Step-through sliding-window search with comparison counter | `find_motif(dna, motif)` |
+| 5 | Translating RNA to Protein | Ribosome walking codons, amino-acid chain, genetic-code table | `translate_rna(rna_sequence)` |
+| 6 | Open Reading Frames (ORFs) | Three reading frames with start/stop codons and a step-through ORF scanner | `find_first_orf(rna)` |
+| 7 | Sequence Alignment Scoring | Column-by-column scoring with editable match/mismatch/gap and a cumulative-score chart | `score_alignment(seq1, seq2)` |
 
 Each module also has a **Code Examples** (דוגמאות קוד) section right before the coding task: ready-made Python programs you can run in the browser, each with a step-by-step Hebrew walkthrough.
 
@@ -46,8 +49,10 @@ index.html          App shell: sidebar, topbar, dual-pane IDE
 css/styles.css      Design tokens, layout, editor theme, console
 css/visuals.css     Lesson typography + Visual Lab components
 js/storage.js       localStorage persistence (code, progress, pane sizes)
-js/curriculum.js    All course content as data: lessons, problems, tests, solutions
+js/curriculum.js    Modules 1–4 as data: lessons, problems, tests, solutions
+js/curriculum-advanced.js  Modules 5–7 (appended to CBB.MODULES) + the shared genetic code
 js/visuals.js       DOM-based interactive labs (one factory per lab)
+js/visuals-advanced.js     Labs for modules 5–7 (translation, ORF scanner, alignment scoring)
 js/pyworker.js      Web Worker: loads Pyodide and runs the Python test harness
 js/runner.js        Worker lifecycle, 8 s time limit (kills + restarts on infinite loops)
 js/editor.js        CodeMirror 5 wrapper (per-module undo history) + textarea fallback
