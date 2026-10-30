@@ -1,0 +1,138 @@
+/* ==========================================================================
+   Bio primer — "biology for programmers" sections and their SVG figures.
+   Colours are exposed as --bf-* tokens on .primer/.bio-fig so the print
+   booklet can re-theme the same markup for paper (see build tooling).
+   ========================================================================== */
+.primer, .bio-fig {
+  --bf-ink: var(--text);
+  --bf-dim: var(--text-dim);
+  --bf-faint: var(--text-faint);
+  --bf-white: #ffffff;
+  --bf-panel: var(--panel-3);
+  --bf-stage: var(--editor-bg);
+  --bf-line: var(--border-strong);
+  --bf-accent: var(--accent-hi);
+  --bf-accent-soft: rgba(124, 92, 255, 0.16);
+  --bf-cyan: var(--cyan);
+  --bf-cyan-soft: rgba(34, 211, 238, 0.12);
+  --bf-ok: var(--success);
+  --bf-ok-soft: rgba(63, 185, 80, 0.16);
+  --bf-warn: var(--warn);
+  --bf-warn-soft: rgba(227, 179, 65, 0.16);
+  --bf-danger: var(--danger);
+  --bf-danger-soft: rgba(248, 81, 73, 0.16);
+  --bf-u: var(--base-u);
+  --bf-a: var(--base-a); --bf-a-soft: rgba(74, 222, 128, 0.16);
+  --bf-t: var(--base-t); --bf-t-soft: rgba(248, 113, 113, 0.16);
+  --bf-g: var(--base-g); --bf-g-soft: rgba(251, 191, 36, 0.16);
+  --bf-c: var(--base-c); --bf-c-soft: rgba(96, 165, 250, 0.16);
+  --bf-u-soft: rgba(192, 132, 252, 0.18);
+  --bf-cell: var(--panel-2);
+  --bf-font: var(--font);
+  --bf-mono: var(--mono);
+}
+
+/* ───────────── Section shell ───────────── */
+.primer { margin: 4px 0 10px; }
+.primer > p:first-child { font-size: 15px; }
+.primer .analogy-table td:first-child { white-space: nowrap; }
+.primer .analogy-table td:nth-child(2) { color: var(--accent-hi); font-weight: 600; }
+.primer .analogy-table td { font-size: 13.2px; }
+.callout-key { background: linear-gradient(120deg, rgba(124, 92, 255, 0.14), rgba(34, 211, 238, 0.08)); border-color: rgba(124, 92, 255, 0.35); border-inline-start-color: var(--accent-hi); }
+.callout-key .callout-title::before { content: "⚡"; }
+.callout-key p { font-size: 14.2px; color: var(--text); }
+
+/* ───────────── Figure shell ───────────── */
+.bio-fig {
+  margin: 18px 0 22px; padding: 0; border: 1px solid var(--border-strong); border-radius: 14px;
+  background: linear-gradient(180deg, var(--panel-2), var(--panel)); overflow: hidden;
+}
+.bio-fig-head { display: flex; align-items: center; gap: 10px; padding: 11px 16px 8px; }
+.bio-fig-badge { font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 20px; background: rgba(124, 92, 255, 0.14); color: var(--accent-hi); border: 1px solid rgba(124, 92, 255, 0.35); }
+.bio-fig-title { font-weight: 700; color: var(--text); font-size: 14.5px; }
+.bio-fig-stage { padding: 6px 12px 4px; background: var(--editor-bg); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.bf-svg { width: 100%; height: auto; display: block; }
+.bio-fig figcaption { padding: 10px 16px 12px; font-size: 12.8px; color: var(--text-dim); line-height: 1.6; }
+
+/* ───────────── SVG primitives ───────────── */
+.bf-tx { font-family: var(--bf-font); font-size: 12.5px; fill: var(--bf-ink); font-variant-ligatures: none; }
+.bf-tx-sm { font-size: 11.5px; } .bf-tx-xs { font-size: 10.5px; } .bf-tx-b { font-weight: 700; }
+.bf-tx-dim { fill: var(--bf-dim); } .bf-tx-faint { fill: var(--bf-faint); } .bf-tx-white { fill: var(--bf-white); }
+.bf-tx-accent { fill: var(--bf-accent); } .bf-tx-cyan { fill: var(--bf-cyan); } .bf-tx-ok { fill: var(--bf-ok); }
+.bf-tx-warn { fill: var(--bf-warn); } .bf-tx-danger { fill: var(--bf-danger); } .bf-tx-u { fill: var(--bf-u); }
+.bf-tx-a { fill: var(--bf-a); } .bf-tx-g { fill: var(--bf-g); } .bf-tx-c { fill: var(--bf-c); } .bf-tx-t { fill: var(--bf-t); }
+.bf-mono { font-family: var(--bf-mono); }
+
+.bf-box { fill: var(--bf-panel); stroke: var(--bf-line); stroke-width: 1.2; }
+.bf-box-panel { fill: var(--bf-panel); }
+.bf-box-stage { fill: var(--bf-stage); }
+.bf-box-code { fill: var(--bf-stage); stroke: var(--bf-line); }
+.bf-box-accent { fill: var(--bf-accent-soft); stroke: var(--bf-accent); }
+.bf-box-cyan { fill: var(--bf-cyan-soft); stroke: var(--bf-cyan); }
+.bf-box-ok { fill: var(--bf-ok-soft); stroke: var(--bf-ok); }
+.bf-box-warn { fill: var(--bf-warn-soft); stroke: var(--bf-warn); }
+.bf-box-danger { fill: var(--bf-danger-soft); stroke: var(--bf-danger); }
+.bf-box-dashed { fill: transparent; stroke: var(--bf-faint); stroke-dasharray: 4 3; }
+.bf-box-dashed-accent { stroke: var(--bf-accent); stroke-dasharray: 5 3; fill: transparent; }
+.bf-box-cell { fill: var(--bf-stage); stroke: var(--bf-line); stroke-width: 2; stroke-dasharray: 10 6; }
+.bf-nucleus { fill: var(--bf-accent-soft); stroke: var(--bf-accent); stroke-width: 2; }
+.bf-ribo { fill: var(--bf-cyan-soft); stroke: var(--bf-cyan); stroke-width: 1.5; }
+.bf-bead { fill: var(--bf-accent-soft); stroke: var(--bf-accent); stroke-width: 1.5; }
+.bf-chain { fill: none; stroke: var(--bf-accent); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.bf-helix-a { fill: none; stroke: var(--bf-c); stroke-width: 3; stroke-linecap: round; }
+.bf-helix-b { fill: none; stroke: var(--bf-u); stroke-width: 3; stroke-linecap: round; }
+.bf-helix-rung { stroke: var(--bf-faint); stroke-width: 1.5; }
+.bf-heat { fill: url(#bf-heat-grad); }
+.bf-hook { stroke: var(--bf-dim); stroke-width: 2; stroke-linecap: round; }
+.bf-hook-broken { stroke: var(--bf-danger); opacity: 0.8; }
+.bf-comp { stroke: var(--bf-stage); stroke-width: 1; }
+.bf-comp-a { fill: var(--bf-a); } .bf-comp-t { fill: var(--bf-t); } .bf-comp-g { fill: var(--bf-g); } .bf-comp-c { fill: var(--bf-c); }
+.bf-bit { fill: var(--bf-stage); stroke: var(--bf-line); }
+.bf-bit-1 { fill: var(--bf-accent); stroke: var(--bf-accent); }
+.bf-window { fill: var(--bf-accent-soft); stroke: var(--bf-accent); stroke-width: 2; }
+.bf-overlap { fill: none; stroke: var(--bf-accent); stroke-width: 1.5; stroke-dasharray: 4 3; }
+.bf-orf-block { fill: none; stroke: var(--bf-accent); stroke-width: 1.5; stroke-dasharray: 6 4; }
+.bf-pill { stroke-width: 1; }
+.bf-cell { fill: var(--bf-cell); stroke: var(--bf-line); }
+.bf-cell-head { fill: var(--bf-stage); }
+.bf-cell-init { fill: var(--bf-cyan-soft); stroke: var(--bf-cyan); }
+.bf-cell-cur { fill: var(--bf-accent-soft); stroke: var(--bf-accent); stroke-width: 2.5; }
+.bf-cell-nb { stroke: var(--bf-warn); stroke-width: 2; }
+.bf-cell-corner { stroke: var(--bf-warn); }
+.bf-cell-max { fill: var(--bf-accent-soft); stroke: var(--bf-accent); }
+.bf-cell-hot { stroke-width: 2; }
+
+.bf-ln { stroke: var(--bf-dim); stroke-width: 2; stroke-linecap: round; fill: none; }
+.bf-ln-ink { stroke: var(--bf-ink); } .bf-ln-dim { stroke: var(--bf-dim); } .bf-ln-faint { stroke: var(--bf-faint); stroke-width: 1.4; }
+.bf-ln-accent { stroke: var(--bf-accent); } .bf-ln-cyan { stroke: var(--bf-cyan); } .bf-ln-ok { stroke: var(--bf-ok); }
+.bf-ln-warn { stroke: var(--bf-warn); } .bf-ln-danger { stroke: var(--bf-danger); } .bf-ln-u { stroke: var(--bf-u); }
+.bf-ln-dashed { stroke-dasharray: 5 4; }
+.bf-fill-ink { fill: var(--bf-ink); } .bf-fill-dim { fill: var(--bf-dim); } .bf-fill-faint { fill: var(--bf-faint); }
+.bf-fill-accent { fill: var(--bf-accent); } .bf-fill-cyan { fill: var(--bf-cyan); } .bf-fill-ok { fill: var(--bf-ok); }
+.bf-fill-warn { fill: var(--bf-warn); } .bf-fill-danger { fill: var(--bf-danger); } .bf-fill-u { fill: var(--bf-u); }
+.bf-fill-stage { fill: var(--bf-stage); }
+
+/* nucleotide tiles inside figures */
+.bf-nt rect { stroke-width: 1; }
+.bf-nt text { font-family: var(--bf-mono); font-weight: 700; font-size: 12.5px; }
+.bf-nt-a rect { fill: var(--bf-a-soft); stroke: var(--bf-a); } .bf-nt-a text { fill: var(--bf-a); }
+.bf-nt-t rect { fill: var(--bf-t-soft); stroke: var(--bf-t); } .bf-nt-t text { fill: var(--bf-t); }
+.bf-nt-g rect { fill: var(--bf-g-soft); stroke: var(--bf-g); } .bf-nt-g text { fill: var(--bf-g); }
+.bf-nt-c rect { fill: var(--bf-c-soft); stroke: var(--bf-c); } .bf-nt-c text { fill: var(--bf-c); }
+.bf-nt-u rect { fill: var(--bf-u-soft); stroke: var(--bf-u); } .bf-nt-u text { fill: var(--bf-u); }
+.bf-nt-x rect { fill: transparent; stroke: var(--bf-faint); stroke-dasharray: 3 2; } .bf-nt-x text { fill: var(--bf-faint); }
+.bf-nt-dim { opacity: 0.32; }
+.bf-nt-open rect { stroke-dasharray: 3 2; }
+.bf-nt-ts rect { stroke: var(--bf-warn); stroke-width: 2; }
+.bf-nt-tv rect { stroke: var(--bf-danger); stroke-width: 2; }
+.bf-nt-ok rect { stroke: var(--bf-ok); stroke-width: 2; }
+.bf-nt-bad rect { stroke: var(--bf-danger); stroke-width: 2; }
+.bf-nt-gapcol rect { stroke: var(--bf-danger); }
+
+@media (max-width: 640px) {
+  .bio-fig-title { font-size: 13px; }
+  .primer .analogy-table td { font-size: 12.4px; }
+}
+
+/* bridging sentence between the analogy section and the precise biology */
+.doc .bridge { color: var(--text-dim); font-size: 13.6px; border-inline-start: 3px solid var(--accent); padding-inline-start: 10px; margin-bottom: 12px; }
